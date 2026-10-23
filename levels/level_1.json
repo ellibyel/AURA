@@ -1,0 +1,26 @@
+{
+  "title": "First Star",
+  "subtitle": "Every journey begins with a little light.",
+  "source": [
+    8,
+    1
+  ],
+  "stars": [
+    [
+      14,
+      7
+    ]
+  ],
+  "par": 1,
+  "solution": [
+    [
+      8,
+      7,
+      45
+    ]
+  ],
+  "hints": [
+    "Place a mirror in column 9, row 8 \u2014 directly below the source.",
+    "Select that mirror and turn it 45 degrees. The beam should travel right."
+  ]
+}

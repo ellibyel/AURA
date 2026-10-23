@@ -1,0 +1,41 @@
+{
+  "title": "A Thread of Memory",
+  "subtitle": "One beam. Two stars. A shared path.",
+  "source": [
+    8,
+    1
+  ],
+  "stars": [
+    [
+      6,
+      7
+    ],
+    [
+      14,
+      7
+    ]
+  ],
+  "par": 3,
+  "solution": [
+    [
+      8,
+      3,
+      135
+    ],
+    [
+      4,
+      3,
+      135
+    ],
+    [
+      4,
+      7,
+      45
+    ]
+  ],
+  "hints": [
+    "Turn the beam left before it reaches the bottom row of stars.",
+    "Try mirrors at column 9 / row 4, column 5 / row 4, and column 5 / row 8.",
+    "Set those mirrors to 135\u00b0, 135\u00b0, and 45\u00b0. Both stars lie on the final rightward beam."
+  ]
+}
