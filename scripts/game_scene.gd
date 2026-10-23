@@ -1,12 +1,17 @@
 extends Node2D
 
-const GRID_SIZE := 48
+const GRID_SIZE := 52
 const GRID_WIDTH := 16
 const GRID_HEIGHT := 9
-const ORIGIN := Vector2(40, 192)
-const MIRROR_HALF_LENGTH := 19.0
+const BOARD := Vector2(GRID_WIDTH * GRID_SIZE, GRID_HEIGHT * GRID_SIZE)
+const ORIGIN := Vector2(24, 112)
+const MIRROR_HALF_LENGTH := 20.5
+const STAR_HIT_RADIUS := 16.0
 const RAY_MAX_BOUNCES := 64
 const RAY_EPSILON := 0.05
+const MIRROR_SCENE := preload("res://scenes/pieces/mirror.tscn")
+const STAR_SCENE := preload("res://scenes/pieces/target_star.tscn")
+const SOURCE_SCENE := preload("res://scenes/pieces/light_source.tscn")
 @export var level_number := 1
 var mirrors: Array[Dictionary] = []
 var selected_mirror := -1
@@ -20,11 +25,16 @@ var blocked := false
 var history: Array[Dictionary] = []
 var hints_used := 0
 var hint_index := 0
+var hint_cells: Array = []
 var tool := "mirror"
 var ui: CanvasLayer
 var scenery: Node2D
-var particles: Array[Dictionary] = []
-var elapsed := 0.0
+# Board pieces are scene instances (see scenes/pieces); the code only places them.
+var pieces: Node2D
+var source_piece: Node2D
+var mirror_pieces: Array[Node2D] = []
+var star_pieces: Array[Node2D] = []
+var piece_event := ""
 var message := ""
 
 func _ready() -> void:
@@ -33,11 +43,15 @@ func _ready() -> void:
 		return
 	level_data = JSON.parse_string(FileAccess.get_file_as_string("res://levels/level_%d.json" % maxi(1,level_number)))
 	setup_level()
-	scenery = load("res://scripts/scenery.gd").new()
-	scenery.show_character = false
+	scenery = load("res://scenes/background.tscn").instantiate()
 	add_child(scenery)
 	move_child(scenery,0)
 	scenery.show_behind_parent = true
+	pieces = Node2D.new()
+	pieces.position = ORIGIN
+	add_child(pieces)
+	source_piece = SOURCE_SCENE.instantiate()
+	pieces.add_child(source_piece)
 	ui = load("res://scripts/game_ui.gd").new()
 	add_child(ui)
 	_update_board()
@@ -53,60 +67,52 @@ func setup_level() -> void:
 	level_won = false
 	hints_used = 0
 	hint_index = 0
+	hint_cells = []
 	message = ""
 
 func grid_center(x: int, y: int) -> Vector2:
 	return Vector2((x + 0.5) * GRID_SIZE, (y + 0.5) * GRID_SIZE)
 
-func _process(delta: float) -> void:
-	if not Aura.reduced_motion: elapsed += delta
-	for i in range(particles.size()-1,-1,-1):
-		particles[i].life -= delta
-		particles[i].pos += particles[i].velocity * delta
-		particles[i].velocity.y += delta * 60.0
-		if particles[i].life <= 0: particles.remove_at(i)
-	queue_redraw()
-
 func _draw() -> void:
+	# Only the board and the light beam are drawn in code: the beam is
+	# geometry computed from the mirrors every time the layout changes.
 	draw_set_transform(ORIGIN)
-	draw_rect(Rect2(-3,-3,774,438),Color("c7bcae"))
-	draw_rect(Rect2(0,0,768,432),Color("f8f3ee"))
+	draw_rect(Rect2(Vector2(-3,-3),BOARD+Vector2(6,6)),Color("c7bcae"))
+	draw_rect(Rect2(Vector2.ZERO,BOARD),Color("f8f3ee"))
 	for x in range(GRID_WIDTH+1):
-		draw_line(Vector2(x*GRID_SIZE,0),Vector2(x*GRID_SIZE,432),Color("e7dfe4"),1)
+		draw_line(Vector2(x*GRID_SIZE,0),Vector2(x*GRID_SIZE,BOARD.y),Color("e2d9e0"),1)
 	for y in range(GRID_HEIGHT+1):
-		draw_line(Vector2(0,y*GRID_SIZE),Vector2(768,y*GRID_SIZE),Color("e7dfe4"),1)
+		draw_line(Vector2(0,y*GRID_SIZE),Vector2(BOARD.x,y*GRID_SIZE),Color("e2d9e0"),1)
+	for cell in hint_cells:
+		draw_rect(Rect2(Vector2(cell[0],cell[1])*GRID_SIZE+Vector2(3,3),Vector2(GRID_SIZE-6,GRID_SIZE-6)),Color("f2d78f",0.55))
+		draw_rect(Rect2(Vector2(cell[0],cell[1])*GRID_SIZE+Vector2(3,3),Vector2(GRID_SIZE-6,GRID_SIZE-6)),Aura.GOLD,false,3)
 	for segment in ray_segments:
 		draw_line(segment.from,segment.to,Color("eac66c",0.25),10,true)
 		draw_line(segment.from,segment.to,Color("bd9547"),3,true)
 		draw_line(segment.from,segment.to,Color("fff1b4"),1,true)
-	draw_circle(light_source_pos,12,Color("d8ad54"))
-	draw_circle(light_source_pos,18,Color("ae8749"),false,2)
-	for star in target_stars:
-		var c := Color("c29a43") if star.hit else Color("8d7d9d")
-		var pulse := 1.0 + (0.06 * sin(elapsed * 3.0) if star.hit else 0.0)
-		if star.hit: draw_circle(star.pos,22,Color("f2d78f",0.3))
-		draw_colored_polygon(star_points(star.pos,12*pulse,5*pulse),c)
-		draw_circle(star.pos,17,c,false,1)
-	for i in range(mirrors.size()):
-		var m: Dictionary = mirrors[i]
-		var center := grid_center(int(m.grid_x),int(m.grid_y))
-		var tangent := Vector2.RIGHT.rotated(deg_to_rad(float(m.rotation)))
-		var normal := tangent.orthogonal()
-		draw_colored_polygon(PackedVector2Array([center-tangent*19,center+normal*6,center+tangent*19,center-normal*6]),Color("a8bfd1"))
-		draw_line(center-tangent*19,center+tangent*19,Color("687d98"),3,true)
-		if i==selected_mirror: draw_circle(center,22,Aura.GOLD,false,2)
-	for particle in particles:
-		draw_colored_polygon(star_points(particle.pos,particle.radius*1.5,particle.radius*0.65),Color(0.8,0.62,0.24,minf(1,particle.life)))
-	draw_set_transform(Vector2.ZERO)
-	for x in range(16):
-		draw_string(ThemeDB.fallback_font,ORIGIN+Vector2(x*48+18,-9),str(x+1),HORIZONTAL_ALIGNMENT_LEFT,-1,12,Aura.PURPLE)
 
-func star_points(center: Vector2, outer: float, inner: float) -> PackedVector2Array:
-	var points := PackedVector2Array()
-	for i in range(10):
-		var a := -PI/2 + float(i)*PI/5
-		points.append(center+Vector2(cos(a),sin(a))*(outer if i%2==0 else inner))
-	return points
+func _sync_pieces() -> void:
+	source_piece.position = light_source_pos
+	while mirror_pieces.size() < mirrors.size():
+		mirror_pieces.append(MIRROR_SCENE.instantiate())
+		pieces.add_child(mirror_pieces.back())
+	while mirror_pieces.size() > mirrors.size():
+		mirror_pieces.pop_back().queue_free()
+	for i in range(mirrors.size()):
+		mirror_pieces[i].position = grid_center(int(mirrors[i].grid_x),int(mirrors[i].grid_y))
+		mirror_pieces[i].rotation_degrees = float(mirrors[i].rotation)
+		mirror_pieces[i].set_selected(i == selected_mirror)
+	if selected_mirror >= 0 and not piece_event.is_empty():
+		mirror_pieces[selected_mirror].play_once(piece_event)
+	piece_event = ""
+	while star_pieces.size() < target_stars.size():
+		star_pieces.append(STAR_SCENE.instantiate())
+		pieces.add_child(star_pieces.back())
+	while star_pieces.size() > target_stars.size():
+		star_pieces.pop_back().queue_free()
+	for i in range(target_stars.size()):
+		star_pieces[i].position = target_stars[i].pos
+		star_pieces[i].set_lit(bool(target_stars[i].hit))
 
 func _unhandled_input(event: InputEvent) -> void:
 	if blocked or (level_won and level_number>0): return
@@ -124,8 +130,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func board_tap(pos: Vector2) -> void:
 	if blocked or (level_won and level_number>0): return
-	if not Rect2(0,0,768,432).has_point(pos): return
-	var cell := Vector2i(floori(pos.x/48),floori(pos.y/48))
+	if not Rect2(Vector2.ZERO,BOARD).has_point(pos): return
+	var cell := Vector2i(floori(pos.x/GRID_SIZE),floori(pos.y/GRID_SIZE))
 	var point := grid_center(cell.x,cell.y)
 	if level_number==0 and tool=="source":
 		if find_mirror_at(cell.x,cell.y)>=0 or star_at(point)>=0:
@@ -152,6 +158,7 @@ func board_tap(pos: Vector2) -> void:
 			snapshot()
 			mirrors.append({"grid_x":cell.x,"grid_y":cell.y,"rotation":0.0})
 			selected_mirror=mirrors.size()-1
+			piece_event="place"
 			Aura.sound("place")
 	_update_board()
 
@@ -174,6 +181,7 @@ func rotate_selected(amount: float) -> void:
 	if blocked or (level_won and level_number>0) or selected_mirror<0:return
 	snapshot()
 	mirrors[selected_mirror].rotation=fposmod(float(mirrors[selected_mirror].rotation)+amount,180)
+	piece_event="turn"
 	Aura.sound("rotate")
 	_update_board()
 
@@ -204,21 +212,21 @@ func reset_level() -> void:
 func show_hint() -> void:
 	if blocked or level_won or level_number==0:return
 	hints_used+=1
-	message=level_data.hints[mini(hint_index,level_data.hints.size()-1)]
+	var index:=mini(hint_index,level_data.hints.size()-1)
+	message=level_data.hints[index]
+	hint_cells=level_data.get("hint_cells",[])[index] if index<level_data.get("hint_cells",[]).size() else []
 	hint_index+=1
 	ui.refresh()
+	queue_redraw()
 
 func rating() -> int:
 	var result:=3 if mirrors.size()<=int(level_data.par) else (2 if mirrors.size()<=int(level_data.par)+2 else 1)
 	return mini(result,2) if hints_used>0 else result
 
 func _update_board() -> void:
-	var previous_hits:Array=[]
-	for star in target_stars: previous_hits.append(bool(star.hit))
 	var previously_won:=level_won
 	_recalculate_rays()
-	for i in range(target_stars.size()):
-		if target_stars[i].hit and not previous_hits[i]: burst(target_stars[i].pos)
+	_sync_pieces()
 	if level_won and not previously_won:
 		Aura.sound("win")
 		if level_number>0:
@@ -227,15 +235,9 @@ func _update_board() -> void:
 	if ui: ui.refresh()
 	queue_redraw()
 
-func burst(pos: Vector2) -> void:
-	if Aura.reduced_motion:return
-	for i in range(26):
-		var direction:=Vector2.RIGHT.rotated(TAU*float(i)/26)
-		particles.append({"pos":pos,"velocity":direction*(35+float(i%5)*17),"life":1.1,"radius":2.0+float(i%3)})
-
 func save_layout() -> void:
-	var data:Dictionary={"source":[light_source_pos.x,light_source_pos.y],"stars":[],"mirrors":mirrors}
-	for star in target_stars:data.stars.append([star.pos.x,star.pos.y])
+	var data:Dictionary={"version":3,"source":_cell_of(light_source_pos),"stars":[],"mirrors":mirrors}
+	for star in target_stars:data.stars.append(_cell_of(star.pos))
 	var file:=FileAccess.open("user://creative.json",FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data))
@@ -255,12 +257,17 @@ func load_layout() -> void:
 		return
 	snapshot()
 	mirrors.assign(data.mirrors)
-	light_source_pos=Vector2(data.source[0],data.source[1])
+	# Assignment 2 saves stored pixel positions on a 48 px grid.
+	var cell_px:=1.0 if int(data.get("version",2))>=3 else 48.0
+	light_source_pos=grid_center(floori(data.source[0]/cell_px),floori(data.source[1]/cell_px))
 	target_stars.clear()
-	for pos in data.stars:target_stars.append({"pos":Vector2(pos[0],pos[1]),"hit":false})
+	for pos in data.stars:target_stars.append({"pos":grid_center(floori(pos[0]/cell_px),floori(pos[1]/cell_px)),"hit":false})
 	selected_mirror=-1
 	message="Saved layout restored."
 	_update_board()
+
+func _cell_of(point: Vector2) -> Array:
+	return [floori(point.x/GRID_SIZE),floori(point.y/GRID_SIZE)]
 
 func _recalculate_rays() -> void:
 	for star in target_stars:
@@ -293,7 +300,7 @@ func _recalculate_rays() -> void:
 			var star: Dictionary = target_stars[i]
 			var to_star: Vector2 = star["pos"] - ray_start
 			var t := to_star.dot(ray_direction)
-			if t > RAY_EPSILON and t <= nearest_t and (to_star - ray_direction * t).length() <= 15.0:
+			if t > RAY_EPSILON and t <= nearest_t and (to_star - ray_direction * t).length() <= STAR_HIT_RADIUS:
 				target_stars[i]["hit"] = true
 
 		end_point = ray_start + ray_direction * nearest_t

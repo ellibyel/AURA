@@ -20,7 +20,21 @@
     ]
   ],
   "hints": [
-    "Place a mirror in column 9, row 8 \u2014 directly below the source.",
-    "Select that mirror and turn it 45 degrees. The beam should travel right."
+    "Place a mirror on the glowing cell, directly below the sun.",
+    "Select that mirror and tap Rotate right once (45°). The beam should travel right."
+  ],
+  "hint_cells": [
+    [
+      [
+        8,
+        7
+      ]
+    ],
+    [
+      [
+        8,
+        7
+      ]
+    ]
   ]
 }

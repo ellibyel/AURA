@@ -1,12 +1,15 @@
 extends Control
 var content: Control
 var scenery: Node2D
+var character: Node2D
 
 func _ready() -> void:
-	scenery = load("res://scripts/scenery.gd").new()
-	scenery.character_position = Vector2(1015, 380)
-	scenery.character_scale = 1.45
+	scenery = load("res://scenes/background.tscn").instantiate()
 	add_child(scenery)
+	character = load("res://scenes/lightkeeper.tscn").instantiate()
+	character.position = Vector2(1015, 380)
+	character.scale = Vector2.ONE * 1.45
+	add_child(character)
 	content = Control.new()
 	add_child(content)
 	show_home()
@@ -18,51 +21,55 @@ func clear() -> void:
 
 func show_home() -> void:
 	clear()
-	scenery.happy = int(Aura.best[1]) > 0
-	Aura.label(content,"A QUIET JOURNEY OF LIGHT",Rect2(90,91,700,40),18,Aura.PURPLE)
-	Aura.label(content,"AURA",Rect2(83,126,700,105),92)
-	Aura.paragraph(content,"Some memories are small as starlight.\nHelp them find their way home.",Rect2(90,259,650,90),25)
-	Aura.button(content,"Continue journey" if int(Aura.best[0]) > 0 else "Begin journey",Rect2(90,395,380,62),func(): start_level(2 if int(Aura.best[0])>0 and int(Aura.best[1])==0 else 1))
-	Aura.button(content,"Choose a chapter",Rect2(90,472,380,58),show_chapters)
-	Aura.button(content,"Creative studio",Rect2(90,545,380,58),func(): start_level(0))
-	Aura.button(content,"Settings",Rect2(90,618,180,54),func(): Aura.open_settings(self))
-	Aura.button(content,"Credits",Rect2(284,618,186,54),show_credits)
-	Aura.label(content,"TWO CHAPTERS  /  NO TIMER  /  PLAY AT YOUR OWN PACE",Rect2(90,710,970,35),16,Aura.PURPLE)
-	Aura.label(content,"Your lightkeeper",Rect2(895,610,320,36),19,Aura.PURPLE).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if not Aura.save_error.is_empty(): Aura.label(content,Aura.save_error,Rect2(90,754,900,28),16)
+	character.visible = true
+	character.happy = int(Aura.best[1]) > 0
+	Aura.label(content,"A QUIET JOURNEY OF LIGHT",Rect2(90,84,700,40),24,Aura.MUTED)
+	Aura.label(content,"AURA",Rect2(83,116,700,105),92)
+	Aura.paragraph(content,"Some memories are small as starlight.\nHelp them find their way home.",Rect2(90,240,650,100),27)
+	Aura.button(content,"Continue journey" if int(Aura.best[0]) > 0 else "Begin journey",Rect2(90,368,380,80),func(): start_level(2 if int(Aura.best[0])>0 and int(Aura.best[1])==0 else 1),28)
+	Aura.button(content,"Choose a chapter",Rect2(90,460,380,76),show_chapters)
+	Aura.button(content,"Creative studio",Rect2(90,548,380,76),func(): start_level(0))
+	Aura.button(content,"Settings",Rect2(90,636,183,76),func(): Aura.open_settings(self))
+	Aura.button(content,"Credits",Rect2(287,636,183,76),show_credits)
+	var tag := Aura.panel(content,Rect2(855,612,320,52))
+	Aura.label(tag,"Your lightkeeper",Rect2(0,6,320,40),24,Aura.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Aura.label(content,"TWO CHAPTERS  ·  NO TIMER  ·  PLAY AT YOUR OWN PACE",Rect2(90,722,970,34),22,Aura.MUTED)
+	if not Aura.save_error.is_empty(): Aura.label(content,Aura.save_error,Rect2(560,84,560,34),22)
 
 func show_chapters() -> void:
 	clear()
-	Aura.label(content,"Choose a chapter",Rect2(80,80,730,70),44)
-	Aura.paragraph(content,"Complete First Star to open the second chapter. Your best rewards are saved automatically.",Rect2(80,167,690,72),22)
+	character.visible = true
+	Aura.label(content,"Choose a chapter",Rect2(80,60,730,70),44)
+	Aura.paragraph(content,"Complete First Star to open the second chapter. Your best rewards are saved automatically.",Rect2(80,140,700,80),24)
 	for i in range(2):
-		var box := Aura.panel(content,Rect2(80,280+i*164,700,142))
-		Aura.label(box,"01  /  First Star" if i==0 else "02  /  A Thread of Memory",Rect2(25,14,610,35),25)
-		Aura.label(box,"Best reward: %d / 3 stars" % int(Aura.best[i]),Rect2(25,60,395,32),19,Aura.PURPLE)
-		var btn := Aura.button(box,"Play" if i<Aura.unlocked else "Locked",Rect2(495,65,178,54),func(): start_level(i+1))
+		var box := Aura.panel(content,Rect2(80,240+i*172,720,152))
+		Aura.label(box,"01  ·  First Star" if i==0 else "02  ·  A Thread of Memory",Rect2(14,14,600,40),30)
+		Aura.label(box,"Best reward: %d / 3 stars" % int(Aura.best[i]),Rect2(14,70,420,36),24,Aura.MUTED)
+		var btn := Aura.button(box,"Play" if i<Aura.unlocked else "Locked",Rect2(500,56,200,80),func(): start_level(i+1),28)
 		btn.disabled = i >= Aura.unlocked
-	Aura.button(content,"Back",Rect2(80,648,195,56),show_home)
-	Aura.button(content,"Reset saved progress",Rect2(294,648,290,56),confirm_reset)
+	Aura.button(content,"Back",Rect2(80,600,200,80),show_home)
+	Aura.button(content,"Reset saved progress",Rect2(296,600,320,80),confirm_reset,24)
 
 func confirm_reset() -> void:
 	var shade := ColorRect.new()
 	shade.color = Color(0,0,0,0.4)
 	shade.size = Vector2(1280,800)
 	add_child(shade)
-	var box := Aura.panel(shade,Rect2(390,260,500,255))
-	Aura.paragraph(box,"Reset both chapter rewards and lock Chapter 2? Your settings and creative layout will stay.",Rect2(28,25,442,95),23)
-	Aura.button(box,"Cancel",Rect2(28,160,210,60),shade.queue_free)
-	Aura.button(box,"Reset progress",Rect2(255,160,215,60),func():
+	var box := Aura.panel(shade,Rect2(360,230,560,300))
+	Aura.paragraph(box,"Reset both chapter rewards and lock Chapter 2? Your settings and creative layout will stay.",Rect2(16,22,528,120),26)
+	Aura.button(box,"Cancel",Rect2(16,186,254,84),shade.queue_free)
+	Aura.button(box,"Reset progress",Rect2(290,186,254,84),func():
 		Aura.reset_progress()
 		shade.queue_free()
 		show_chapters())
 
 func show_credits() -> void:
 	clear()
-	var box := Aura.panel(content,Rect2(70,70,735,625))
-	Aura.label(box,"AURA / MT-2402",Rect2(32,25,670,50),34)
-	Aura.paragraph(box,"Elmira Bukhanova — mechanics & level design\nKhalida Yerpan — interface & game flow\nDiana Zhumagali — visual & sound direction\n\nA two-chapter student puzzle inspired by the quiet fantasy atmosphere of Frieren: Beyond Journey's End.\n\nOriginal procedural elf illustration, scenery and synthesized sounds. No anime artwork or soundtrack.\n\nReference games: Monument Valley and Portal.\nEngine: Godot (MIT). See README for asset and assistance notes.",Rect2(32,100,670,435),21)
-	Aura.button(box,"Back",Rect2(32,540,200,55),show_home)
+	character.visible = false
+	var box := Aura.panel(content,Rect2(70,40,1140,700))
+	Aura.label(box,"AURA / MT-2402",Rect2(20,16,1000,50),36)
+	Aura.paragraph(box,"Elmira Bukhanova — mechanics & level design\nKhalida Yerpan — interface & game flow\nDiana Zhumagali — visual & sound direction\n\nSounds: Kenney (kenney.nl), \"Interface Sounds\" and \"Music Jingles\", CC0 1.0.\nArt: character, scenery and board pieces are editor-animated frames in assets/art.\nEngine: Godot 4.7 (MIT). Default Godot font.\nAI assistance (ChatGPT, Claude) is listed file by file in the README.\n\nInspired by the calm mood of Frieren: Beyond Journey's End; puzzle references: Monument Valley and Portal. No artwork or music from these works is used.",Rect2(20,80,1090,500),25)
+	Aura.button(box,"Back",Rect2(20,600,220,80),show_home)
 
 func start_level(number: int) -> void:
 	if number > Aura.unlocked: return
