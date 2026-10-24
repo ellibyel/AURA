@@ -68,7 +68,7 @@ func show_credits() -> void:
 	character.visible = false
 	var box := Aura.panel(content,Rect2(70,40,1140,700))
 	Aura.label(box,"AURA / MT-2402",Rect2(20,16,1000,50),36)
-	Aura.paragraph(box,"Elmira Bukhanova — mechanics & level design\nKhalida Yerpan — interface & game flow\nDiana Zhumagali — visual & sound direction\n\nSounds: Kenney (kenney.nl), \"Interface Sounds\" and \"Music Jingles\", CC0 1.0.\nArt: character, scenery and board pieces are editor-animated frames in assets/art.\nEngine: Godot 4.7 (MIT). Default Godot font.\nAI assistance (ChatGPT, Claude) is listed file by file in the README.\n\nInspired by the calm mood of Frieren: Beyond Journey's End; puzzle references: Monument Valley and Portal. No artwork or music from these works is used.",Rect2(20,80,1090,500),25)
+	Aura.paragraph(box,"Elmira Bukhanova — mechanics & level design\nKhalida Yerpan — interface & game flow\nDiana Zhumagali — visual & sound direction\n\nSounds: Kenney (kenney.nl), \"Interface Sounds\" and \"Music Jingles\", CC0 1.0.\nMusic: made in Apple GarageBand with the \"Set Free Melodic Synth\" loop and the Grand Piano instrument, used under the GarageBand licence.\nArt: character, scenery and board pieces are editor-animated frames in assets/art.\nEngine: Godot 4.7 (MIT). Default Godot font.\nAI assistance (ChatGPT, Claude) is listed file by file in the README.\n\nInspired by the calm mood of Frieren: Beyond Journey's End; puzzle references: Monument Valley and Portal. No artwork or music from these works is used.",Rect2(20,80,1090,500),25)
 	Aura.button(box,"Back",Rect2(20,600,220,80),show_home)
 
 func start_level(number: int) -> void:

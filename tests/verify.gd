@@ -38,6 +38,7 @@ func _ready() -> void:
 	check_readable(one.ui, "chapter 1 HUD")
 	for key in ["place","rotate","win"]:
 		check(Aura.voices[key].stream != null and Aura.SOUNDS[key].begins_with("res://assets/audio/kenney/"), "sound '%s' is a credited Kenney CC0 file" % key)
+	check(Aura.has_music() and Aura.music.playing, "background music loads and plays")
 	one.show_hint()
 	check(one.hint_cells.size()==1 and Vector2i(one.hint_cells[0][0],one.hint_cells[0][1])==Vector2i(8,7), "hint highlights the solution cell")
 	one.board_tap(one.grid_center(8,3))
