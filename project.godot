@@ -20,6 +20,10 @@ run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.png"
 
+[audio]
+
+general/ios/session_category=3
+
 [autoload]
 
 Aura="*res://scripts/aura.gd"
