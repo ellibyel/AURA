@@ -18,6 +18,8 @@ var modal: Control
 
 func _ready() -> void:
 	game=get_parent()
+	offset.x=Aura.margin_x
+	Aura.layout_changed.connect(func():offset.x=Aura.margin_x)
 	var header:=Aura.panel(self,Rect2(24,12,1062,88))
 	Aura.label(header,"Creative Studio  ·  A place to experiment" if game.level_number==0 else "Chapter %d  ·  %s" % [game.level_number,game.level_data.title],Rect2(8,4,1040,44),32)
 	if game.level_number>0:
@@ -83,9 +85,10 @@ func show_success() -> void:
 	if success:return
 	success=ColorRect.new()
 	success.color=Color(0.17,0.13,0.23,0.40)
-	success.size=Vector2(1280,800)
+	success.position=Vector2(-640,0)
+	success.size=Vector2(2560,800)
 	add_child(success)
-	var box:=Aura.panel(success,Rect2(290,170,700,440))
+	var box:=Aura.panel(success,Rect2(930,170,700,440))
 	Aura.label(box,"Chapter complete" if game.level_number==1 else "A journey remembered",Rect2(20,20,660,56),38).horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	Aura.label(box,"★".repeat(game.rating())+"☆".repeat(3-game.rating()),Rect2(20,82,660,70),52,Color("7d5f2a")).horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	var text: String="Mirrors used: %d  ·  Best reward: %d of 3" % [game.mirrors.size(),int(Aura.best[game.level_number-1])]
@@ -103,13 +106,14 @@ func open_pause() -> void:
 	refresh()
 	modal=ColorRect.new()
 	modal.color=Color(0.15,0.12,0.22,0.55)
-	modal.size=Vector2(1280,800)
+	modal.position=Vector2(-640,0)
+	modal.size=Vector2(2560,800)
 	add_child(modal)
-	var box:=Aura.panel(modal,Rect2(390,120,500,540))
+	var box:=Aura.panel(modal,Rect2(1030,120,500,540))
 	Aura.label(box,"Paused",Rect2(20,18,460,56),38).horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	Aura.button(box,"Resume",Rect2(40,96,420,84),resume)
 	Aura.button(box,"Restart" if game.level_number==0 else "Restart chapter",Rect2(40,196,420,84),func():get_tree().reload_current_scene())
-	Aura.button(box,"Settings",Rect2(40,296,420,84),func():Aura.open_settings(modal))
+	Aura.button(box,"Settings",Rect2(40,296,420,84),func():Aura.open_settings(self))
 	Aura.button(box,"Main menu",Rect2(40,396,420,84),go_menu)
 
 func resume() -> void:
@@ -120,7 +124,7 @@ func resume() -> void:
 
 func _notification(what: int) -> void:
 	# Leaving the app (home gesture, call) pauses the puzzle.
-	if what==NOTIFICATION_APPLICATION_PAUSED and is_node_ready():open_pause()
+	if what in [NOTIFICATION_APPLICATION_PAUSED,NOTIFICATION_APPLICATION_FOCUS_OUT] and is_node_ready():open_pause()
 
 func go_menu() -> void:
 	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")

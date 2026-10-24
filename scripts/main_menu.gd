@@ -53,9 +53,10 @@ func show_chapters() -> void:
 func confirm_reset() -> void:
 	var shade := ColorRect.new()
 	shade.color = Color(0,0,0,0.4)
-	shade.size = Vector2(1280,800)
+	shade.position = Vector2(-640,0)
+	shade.size = Vector2(2560,800)
 	add_child(shade)
-	var box := Aura.panel(shade,Rect2(360,230,560,300))
+	var box := Aura.panel(shade,Rect2(1000,230,560,300))
 	Aura.paragraph(box,"Reset both chapter rewards and lock Chapter 2? Your settings and creative layout will stay.",Rect2(16,22,528,120),26)
 	Aura.button(box,"Cancel",Rect2(16,186,254,84),shade.queue_free)
 	Aura.button(box,"Reset progress",Rect2(290,186,254,84),func():

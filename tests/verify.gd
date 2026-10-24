@@ -59,7 +59,8 @@ func _ready() -> void:
 	check(Aura.best[0]==2, "hint caps chapter 1 reward at two stars")
 	Aura.best[0]=3
 	check(Aura.unlocked==2,"chapter 2 unlock")
-	await get_tree().process_frame
+	check(one.ui.success == null, "completion panel waits so the lit star stays visible")
+	await get_tree().create_timer(one.SUCCESS_DELAY + 0.2).timeout
 	check_readable(one.ui.success, "completion panel")
 	var layout=one.mirrors.duplicate(true)
 	one.rotate_selected(45)
@@ -81,18 +82,22 @@ func _ready() -> void:
 		two.rotate_selected(item[2])
 	check(two.level_won and two.stars_hit==2,"chapter 2 lights both stars with 3 mirrors")
 	check(Aura.best[1]==3,"chapter 2 award saved")
+	await get_tree().create_timer(two.SUCCESS_DELAY + 0.2).timeout
 	two.ui.success.queue_free()
 	two.ui.success=null
 	two.ui.open_pause()
 	await get_tree().process_frame
 	check(two.blocked and two.ui.modal != null, "pause opens and blocks the board")
 	check_readable(two.ui.modal, "pause menu")
-	var settings = Aura.open_settings(two.ui.modal)
+	var settings = Aura.open_settings(two.ui)
 	await get_tree().process_frame
 	check_readable(settings, "settings")
 	settings.queue_free()
 	two.ui.resume()
 	check(not two.blocked and two.ui.modal == null, "resume unblocks the board")
+	two.ui._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	check(two.ui.modal != null, "leaving the app opens the pause menu")
+	two.ui.resume()
 	two.queue_free()
 	await get_tree().process_frame
 	var studio=spawn_level(0)

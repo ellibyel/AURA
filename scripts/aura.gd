@@ -15,6 +15,11 @@ const SOUNDS := {
 # Drop the team's own loop here; the game runs without music until it exists.
 const MUSIC_PATH := "res://assets/audio/music/ambience.ogg"
 signal motion_changed
+signal layout_changed
+# Wide phones (iPhone ~19.5:9) get extra width instead of black bars: the
+# 1280x800 layout is centred and only the background fills the sides.
+const DESIGN := Vector2(1280, 800)
+var margin_x := 0.0
 var best: Array = [0, 0]
 var unlocked := 1
 var sfx_volume := 0.7
@@ -27,6 +32,8 @@ var voices: Dictionary = {}
 
 func _ready() -> void:
 	load_progress()
+	get_tree().root.size_changed.connect(apply_layout)
+	apply_layout()
 	music = AudioStreamPlayer.new()
 	add_child(music)
 	if ResourceLoader.exists(MUSIC_PATH):
@@ -40,6 +47,12 @@ func _ready() -> void:
 		add_child(voice)
 		voices[key] = voice
 	apply_audio()
+
+func apply_layout() -> void:
+	var width := get_tree().root.get_visible_rect().size.x
+	margin_x = maxf(0.0, (width - DESIGN.x) / 2.0)
+	get_tree().root.canvas_transform = Transform2D(0.0, Vector2(margin_x, 0.0))
+	layout_changed.emit()
 
 func has_music() -> bool:
 	return music.stream != null
@@ -159,9 +172,10 @@ func panel(parent: Node, rect: Rect2) -> Panel:
 func open_settings(parent: Node, on_close: Callable = Callable()) -> Control:
 	var overlay := ColorRect.new()
 	overlay.color = Color(0.15, 0.12, 0.22, 0.55)
-	overlay.size = Vector2(1280, 800)
+	overlay.position = Vector2(-640, 0)
+	overlay.size = Vector2(2560, 800)
 	parent.add_child(overlay)
-	var box := panel(overlay, Rect2(340, 90, 600, 610))
+	var box := panel(overlay, Rect2(980, 90, 600, 610))
 	label(box, "Settings", Rect2(32, 20, 536, 50), 34)
 	for i in range(2):
 		var y := 96 + i * 92

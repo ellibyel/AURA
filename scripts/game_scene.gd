@@ -9,6 +9,8 @@ const MIRROR_HALF_LENGTH := 20.5
 const STAR_HIT_RADIUS := 16.0
 const RAY_MAX_BOUNCES := 64
 const RAY_EPSILON := 0.05
+# Seconds between the last star lighting up and the completion panel.
+const SUCCESS_DELAY := 1.5
 const MIRROR_SCENE := preload("res://scenes/pieces/mirror.tscn")
 const STAR_SCENE := preload("res://scenes/pieces/target_star.tscn")
 const SOURCE_SCENE := preload("res://scenes/pieces/light_source.tscn")
@@ -117,7 +119,7 @@ func _sync_pieces() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if blocked or (level_won and level_number>0): return
 	if event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT and event.pressed:
-		board_tap(event.position-ORIGIN)
+		board_tap(make_input_local(event).position-ORIGIN)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
@@ -231,7 +233,7 @@ func _update_board() -> void:
 		Aura.sound("win")
 		if level_number>0:
 			Aura.complete(level_number,rating())
-			if ui: ui.show_success()
+			if ui: get_tree().create_timer(SUCCESS_DELAY).timeout.connect(ui.show_success)
 	if ui: ui.refresh()
 	queue_redraw()
 

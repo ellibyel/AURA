@@ -14,7 +14,7 @@ func _ready() -> void:
 	one.board_tap(one.grid_center(8,7))
 	await shot("level1_placed")
 	one.rotate_selected(45)
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(2.0).timeout
 	await shot("level1_won")
 	one.queue_free()
 	var two = load("res://levels/level_2.tscn").instantiate()
@@ -25,7 +25,7 @@ func _ready() -> void:
 	await shot("level2_hint")
 	two.ui.open_pause()
 	await shot("pause")
-	Aura.open_settings(two.ui.modal)
+	Aura.open_settings(two.ui)
 	await shot("settings")
 	Aura.reset_progress()
 	get_tree().quit()
