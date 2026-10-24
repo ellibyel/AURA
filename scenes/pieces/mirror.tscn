@@ -1,8 +1,8 @@
 [gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/mirror_piece.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/art/pieces/mirror.svg" id="2"]
-[ext_resource type="Texture2D" path="res://assets/art/pieces/select_ring.svg" id="3"]
+[ext_resource type="Texture2D" path="res://assets/art/pieces/mirror.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/art/pieces/select_ring.png" id="3"]
 
 [sub_resource type="Animation" id="Animation_place"]
 resource_name = "place"

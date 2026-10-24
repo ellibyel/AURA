@@ -1,9 +1,9 @@
 [gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/target_star.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/art/pieces/star_dim.svg" id="2"]
-[ext_resource type="Texture2D" path="res://assets/art/pieces/star_lit.svg" id="3"]
-[ext_resource type="Texture2D" path="res://assets/art/pieces/sparkle.svg" id="4"]
+[ext_resource type="Texture2D" path="res://assets/art/pieces/star_dim.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/art/pieces/star_lit.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/art/pieces/sparkle.png" id="4"]
 
 [sub_resource type="Animation" id="Animation_pulse"]
 resource_name = "pulse"

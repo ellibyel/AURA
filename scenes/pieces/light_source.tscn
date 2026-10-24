@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/animated_scene.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/art/pieces/sun.svg" id="2"]
-[ext_resource type="Texture2D" path="res://assets/art/pieces/sun_glow.svg" id="3"]
+[ext_resource type="Texture2D" path="res://assets/art/pieces/sun.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/art/pieces/sun_glow.png" id="3"]
 
 [sub_resource type="Animation" id="Animation_glow"]
 resource_name = "glow"

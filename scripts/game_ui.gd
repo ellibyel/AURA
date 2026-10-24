@@ -28,8 +28,8 @@ func _ready() -> void:
 	var panel:=Aura.panel(self,Rect2(872,112,384,524))
 	status=Aura.label(panel,"",Rect2(12,10,360,40),28,Color("7d5f2a"))
 	character=load("res://scenes/lightkeeper.tscn").instantiate()
-	character.position=Vector2(192,134)
-	character.scale=Vector2.ONE*0.66
+	character.position=Vector2(192,150)
+	character.scale=Vector2.ONE*0.8
 	panel.add_child(character)
 	guide=Aura.paragraph(panel,"",Rect2(12,262,360,180),23)
 	var info:=Aura.panel(self,Rect2(24,592,832,46))
