@@ -2,6 +2,8 @@
 
 AURA is a relaxing light-reflection puzzle: place and turn mirrors on a grid to bend the light beam.
 
+**Version 4.0** (Assignment 4) — Android APK and iOS build, 8 chapters.
+
 ## Team
 
 - **Elmira** — mechanics & levels (beam reflection, undo, star rewards; level data `level_1/2.json`; demo: Chapter 1 → Chapter 2)
@@ -18,7 +20,11 @@ Auto-tests are located in the `tests/` folder. To run them, open `res://tests/ve
 godot --headless --path GameProject res://tests/verify.tscn
 ```
 
-All 34 checks should print PASS.
+All 51 checks should print PASS.
+
+Every level is checked by `tools/level_solver.py` (Python 3): `python3 tools/level_solver.py check-all` prints the minimum number of mirrors for each chapter.
+
+To build the Android APK: Project → Export → Android → Export Project (debug keystore, Godot 4.7.2 Android templates).
 
 To build the game for iPhone:
 
@@ -30,7 +36,7 @@ To build the game for iPhone:
 
 ## How to play
 
-**Goal:** Your goal is to light up every star on the board with a single beam.
+**Goal:** Your goal is to light up every star on the board with a single beam. Stone walls stop the light, and each chapter gives a limited number of mirrors.
 
 **Gameplay loop:** Place a mirror → Rotate it → Watch the beam → Adjust → Light every star → Complete the chapter.
 
@@ -38,14 +44,13 @@ To build the game for iPhone:
 
 - Tap an empty cell — place a crystal mirror
 - Tap a mirror — select it
-- Rotate left / Rotate right — turn the selected mirror by 45°
-- Undo — undo the last action
-- Delete — remove the selected mirror
-- Reset — clear the board
-- Need a hint? — highlight the right cells (max 2 stars)
-- Pause — open the pause menu (Resume, Restart, Settings, Main menu)
+- Round arrow icons (right side) — turn the selected mirror by 45°
+- Undo / Delete / Reset icons (left side) — undo the last action, remove the selected mirror, clear the board
+- Light bulb icon — hint (1 free per chapter; a demo "rewarded ad" gives one more)
+- Pause icon — Resume, Restart, Chapters, Settings, Main menu
+- Optional: Tilt to rotate (Settings) — tilt the phone left or right to turn the selected mirror
 
-**3 stars:** Complete a chapter using the minimum number of mirrors (1 in Chapter 1, 3 in Chapter 2) without any hints. Using up to 2 extra mirrors gives 2 stars, more gives 1 star. Using a hint limits the reward to 2 stars.
+**3 stars:** Complete a chapter with the minimum number of mirrors (found by the level solver) and no hints. One extra mirror costs a star, using hints costs a star (minimum 1 star). Each chapter allows only one mirror more than the minimum.
 
 ## What changed since Assignment 2
 
@@ -55,6 +60,12 @@ After Assignment 2, we improved the game based on feedback and phone testing:
 - Three sound effects with unknown authors and licences → replaced with Kenney CC0 sounds (credited); own music made in GarageBand
 - Unclear AI use; AI-made assets and code-drawn animation → animation moved to editor scenes (AnimationPlayer, sprite frames); AI use listed below
 - Win panel covered the lit star, no pause after leaving the app, black side bars, no sound on silent mode → 1.5 s panel delay, pause on focus loss, full-width layout, Playback audio session
+
+## What changed in Assignment 4
+
+- Assignment 3 feedback (UI): the board now fills most of the screen; text buttons were replaced with round icon buttons on a layer over the board; the title, stars and mirror count are small chips; tips are short toasts.
+- Assignment 3 feedback (difficulty): 8 chapters instead of 2, stone walls, a mirror limit and stricter stars. Every level is checked by a solver; most have one to four possible minimum solutions.
+- Animated background (drifting scenery, glowing moon, fireflies), vibration feedback, optional tilt controls, chapter select with stars, demo rewarded ad, built-in performance test (Settings → Performance test).
 
 ## Mobile interface
 
@@ -81,6 +92,7 @@ Light beam and reflections (file: `scripts/game_scene.gd`, function: `_recalcula
 - `levels/` — level data
 - `assets/` — images, music and sounds
 - `tests/` — automated checks
+- `tools/level_solver.py` — level solver and generator
 
 ## Testing
 

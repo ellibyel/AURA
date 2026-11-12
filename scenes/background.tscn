@@ -1,10 +1,51 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/background.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/art/background/scenery.png" id="2"]
 [ext_resource type="Texture2D" path="res://assets/art/background/dust_a.png" id="3"]
 [ext_resource type="Texture2D" path="res://assets/art/background/dust_b.png" id="4"]
 [ext_resource type="Texture2D" path="res://assets/art/background/dust_c.png" id="5"]
+
+[ext_resource type="Texture2D" path="res://assets/art/pieces/sparkle.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/art/pieces/sun_glow.png" id="7"]
+
+[sub_resource type="Gradient" id="Gradient_firefly"]
+offsets = PackedFloat32Array(0, 0.2, 0.8, 1)
+colors = PackedColorArray(1, 0.95, 0.75, 0, 1, 0.95, 0.75, 0.9, 1, 0.95, 0.75, 0.9, 1, 0.95, 0.75, 0)
+
+[sub_resource type="Animation" id="Animation_drift"]
+resource_name = "drift"
+length = 24.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Scenery:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 12, 24),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(-30, -16), Vector2(-8, -22), Vector2(-30, -16)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("SunGlow:scale")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 6, 12, 18, 24),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(4, 4), Vector2(4.6, 4.6), Vector2(4, 4), Vector2(4.6, 4.6), Vector2(4, 4)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_drift"]
+_data = {
+&"drift": SubResource("Animation_drift")
+}
 
 [sub_resource type="Animation" id="Animation_twinkle"]
 resource_name = "twinkle"
@@ -56,9 +97,16 @@ _data = {
 script = ExtResource("1")
 
 [node name="Scenery" type="Sprite2D" parent="."]
-scale = Vector2(0.5, 0.5)
+position = Vector2(-30, -16)
+scale = Vector2(0.53, 0.53)
 texture = ExtResource("2")
 centered = false
+
+[node name="SunGlow" type="Sprite2D" parent="."]
+modulate = Color(1, 0.92, 0.75, 0.45)
+position = Vector2(1160, 80)
+scale = Vector2(4, 4)
+texture = ExtResource("7")
 
 [node name="DustA" type="Sprite2D" parent="."]
 modulate = Color(1, 1, 1, 0.5)
@@ -83,3 +131,28 @@ libraries = {
 &"": SubResource("AnimationLibrary_background")
 }
 autoplay = &"twinkle"
+
+[node name="Fireflies" type="CPUParticles2D" parent="."]
+position = Vector2(640, 820)
+amount = 36
+lifetime = 14.0
+preprocess = 14.0
+texture = ExtResource("6")
+emission_shape = 3
+emission_rect_extents = Vector2(700, 20)
+direction = Vector2(0, -1)
+spread = 25.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 25.0
+initial_velocity_max = 60.0
+angular_velocity_min = -40.0
+angular_velocity_max = 40.0
+scale_amount_min = 0.8
+scale_amount_max = 1.8
+color_ramp = SubResource("Gradient_firefly")
+
+[node name="Drift" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_drift")
+}
+autoplay = &"drift"

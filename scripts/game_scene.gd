@@ -1,12 +1,19 @@
 extends Node2D
 
-const GRID_SIZE := 52
+# The board fills most of the screen; icon controls float on a layer above it.
+const GRID_SIZE := 68
 const GRID_WIDTH := 16
 const GRID_HEIGHT := 9
 const BOARD := Vector2(GRID_WIDTH * GRID_SIZE, GRID_HEIGHT * GRID_SIZE)
-const ORIGIN := Vector2(24, 112)
-const MIRROR_HALF_LENGTH := 20.5
-const STAR_HIT_RADIUS := 16.0
+const ORIGIN := Vector2(96, 94)
+const MIRROR_HALF_LENGTH := 26.8
+const STAR_HIT_RADIUS := 21.0
+const FREE_HINTS := 1
+# Piece art is drawn for a 52 px cell.
+const PIECE_SCALE := GRID_SIZE / 52.0
+# Tilt to rotate (optional setting): m/s² away from the resting tilt.
+const TILT_TRIGGER := 3.5
+const TILT_RESET := 1.5
 const RAY_MAX_BOUNCES := 64
 const RAY_EPSILON := 0.05
 # Seconds between the last star lighting up and the completion panel.
@@ -14,7 +21,8 @@ const SUCCESS_DELAY := 1.5
 const MIRROR_SCENE := preload("res://scenes/pieces/mirror.tscn")
 const STAR_SCENE := preload("res://scenes/pieces/target_star.tscn")
 const SOURCE_SCENE := preload("res://scenes/pieces/light_source.tscn")
-@export var level_number := 1
+# -1: take the chapter from Aura.current_level (0 = Creative Studio).
+@export var level_number := -1
 var mirrors: Array[Dictionary] = []
 var selected_mirror := -1
 var light_source_pos := Vector2.ZERO
@@ -27,6 +35,11 @@ var blocked := false
 var history: Array[Dictionary] = []
 var hints_used := 0
 var hint_index := 0
+var hints_left := FREE_HINTS
+var walls: Array[Vector2i] = []
+var max_mirrors := 99
+var tilt_base := Vector3.ZERO
+var tilt_armed := true
 var hint_cells: Array = []
 var tool := "mirror"
 var ui: CanvasLayer
@@ -40,10 +53,11 @@ var piece_event := ""
 var message := ""
 
 func _ready() -> void:
+	if level_number < 0: level_number = Aura.current_level
 	if level_number > Aura.unlocked:
 		get_tree().call_deferred("change_scene_to_file", "res://scenes/main_menu.tscn")
 		return
-	level_data = JSON.parse_string(FileAccess.get_file_as_string("res://levels/level_%d.json" % maxi(1,level_number)))
+	level_data = JSON.parse_string(FileAccess.get_file_as_string("res://levels/level_%d.json" % maxi(1,level_number))) if level_number > 0 else {"source":[8,1],"stars":[[14,7]],"walls":[],"par":0,"solution":[]}
 	setup_level()
 	scenery = load("res://scenes/background.tscn").instantiate()
 	add_child(scenery)
@@ -53,6 +67,7 @@ func _ready() -> void:
 	pieces.position = ORIGIN
 	add_child(pieces)
 	source_piece = SOURCE_SCENE.instantiate()
+	source_piece.scale = Vector2.ONE * PIECE_SCALE
 	pieces.add_child(source_piece)
 	ui = load("res://scripts/game_ui.gd").new()
 	add_child(ui)
@@ -63,6 +78,11 @@ func setup_level() -> void:
 	target_stars.clear()
 	for pos in level_data.stars:
 		target_stars.append({"pos":grid_center(int(pos[0]),int(pos[1])),"hit":false})
+	walls.clear()
+	for cell in level_data.get("walls", []):
+		walls.append(Vector2i(int(cell[0]), int(cell[1])))
+	max_mirrors = int(level_data.get("max_mirrors", 99)) if level_number > 0 else 99
+	hints_left = FREE_HINTS
 	mirrors.clear()
 	history.clear()
 	selected_mirror = -1
@@ -79,12 +99,16 @@ func _draw() -> void:
 	# Only the board and the light beam are drawn in code: the beam is
 	# geometry computed from the mirrors every time the layout changes.
 	draw_set_transform(ORIGIN)
-	draw_rect(Rect2(Vector2(-3,-3),BOARD+Vector2(6,6)),Color("c7bcae"))
-	draw_rect(Rect2(Vector2.ZERO,BOARD),Color("f8f3ee"))
+	draw_rect(Rect2(Vector2(-4,-4),BOARD+Vector2(8,8)),Color(1,1,1,0.85))
+	draw_rect(Rect2(Vector2.ZERO,BOARD),Color("f8f3ee",0.94))
 	for x in range(GRID_WIDTH+1):
 		draw_line(Vector2(x*GRID_SIZE,0),Vector2(x*GRID_SIZE,BOARD.y),Color("e2d9e0"),1)
 	for y in range(GRID_HEIGHT+1):
 		draw_line(Vector2(0,y*GRID_SIZE),Vector2(BOARD.x,y*GRID_SIZE),Color("e2d9e0"),1)
+	for wall in walls:
+		var box := Rect2(Vector2(wall)*GRID_SIZE+Vector2(5,5),Vector2(GRID_SIZE-10,GRID_SIZE-10))
+		draw_rect(box,Color("6d6080"))
+		draw_rect(box.grow(-9),Color("807394"))
 	for cell in hint_cells:
 		draw_rect(Rect2(Vector2(cell[0],cell[1])*GRID_SIZE+Vector2(3,3),Vector2(GRID_SIZE-6,GRID_SIZE-6)),Color("f2d78f",0.55))
 		draw_rect(Rect2(Vector2(cell[0],cell[1])*GRID_SIZE+Vector2(3,3),Vector2(GRID_SIZE-6,GRID_SIZE-6)),Aura.GOLD,false,3)
@@ -97,6 +121,7 @@ func _sync_pieces() -> void:
 	source_piece.position = light_source_pos
 	while mirror_pieces.size() < mirrors.size():
 		mirror_pieces.append(MIRROR_SCENE.instantiate())
+		mirror_pieces.back().scale = Vector2.ONE * PIECE_SCALE
 		pieces.add_child(mirror_pieces.back())
 	while mirror_pieces.size() > mirrors.size():
 		mirror_pieces.pop_back().queue_free()
@@ -109,12 +134,32 @@ func _sync_pieces() -> void:
 	piece_event = ""
 	while star_pieces.size() < target_stars.size():
 		star_pieces.append(STAR_SCENE.instantiate())
+		star_pieces.back().scale = Vector2.ONE * PIECE_SCALE
 		pieces.add_child(star_pieces.back())
 	while star_pieces.size() > target_stars.size():
 		star_pieces.pop_back().queue_free()
 	for i in range(target_stars.size()):
 		star_pieces[i].position = target_stars[i].pos
+		if bool(target_stars[i].hit) and not star_pieces[i].lit: Aura.haptic(25)
 		star_pieces[i].set_lit(bool(target_stars[i].hit))
+
+func _process(_delta: float) -> void:
+	if not Aura.tilt_rotate or blocked or selected_mirror < 0:
+		tilt_base = Vector3.ZERO
+		return
+	var accel := Input.get_accelerometer()
+	if accel == Vector3.ZERO: return
+	if tilt_base == Vector3.ZERO:
+		tilt_base = accel
+		return
+	# In landscape the left/right tilt shows up on whichever axis changes most.
+	var change := accel - tilt_base
+	var tilt := change.x if absf(change.x) > absf(change.y) else -change.y
+	if tilt_armed and absf(tilt) > TILT_TRIGGER:
+		tilt_armed = false
+		rotate_selected(45.0 if tilt > 0 else -45.0)
+	elif absf(tilt) < TILT_RESET:
+		tilt_armed = true
 
 func _unhandled_input(event: InputEvent) -> void:
 	if blocked or (level_won and level_number>0): return
@@ -150,12 +195,17 @@ func board_tap(pos: Vector2) -> void:
 		elif target_stars.size()<12: target_stars.append({"pos":point,"hit":false})
 		else: message="Up to 12 target stars per creative layout."
 	else:
-		if point==light_source_pos or star_at(point)>=0:
-			message="Keep the source and target cells clear."
+		if point==light_source_pos or star_at(point)>=0 or walls.has(cell):
+			message="Keep the sun, stars and stones clear."
 			ui.refresh()
 			return
 		var found:=find_mirror_at(cell.x,cell.y)
 		if found>=0: selected_mirror=found
+		elif mirrors.size()>=max_mirrors:
+			message="No mirrors left. Move or delete one."
+			Aura.haptic(60)
+			ui.refresh()
+			return
 		else:
 			snapshot()
 			mirrors.append({"grid_x":cell.x,"grid_y":cell.y,"rotation":0.0})
@@ -211,19 +261,37 @@ func reset_level() -> void:
 	selected_mirror=-1
 	_update_board()
 
+# Hints are built from the level's verified solution (tools/level_solver.py):
+# the first shows where the first mirror goes, the next shows every mirror cell.
 func show_hint() -> void:
 	if blocked or level_won or level_number==0:return
+	if hints_left<=0:
+		ui.offer_ad()
+		return
+	hints_left-=1
 	hints_used+=1
-	var index:=mini(hint_index,level_data.hints.size()-1)
-	message=level_data.hints[index]
-	hint_cells=level_data.get("hint_cells",[])[index] if index<level_data.get("hint_cells",[]).size() else []
+	var solution:Array=level_data.solution
+	if hint_index==0:
+		hint_cells=[solution[0]]
+		message="You need %d mirror%s. The first one goes on the glowing cell." % [solution.size(),"" if solution.size()==1 else "s"]
+	else:
+		hint_cells=solution.duplicate()
+		message="Every mirror cell is glowing. Turn each mirror to steer the beam."
 	hint_index+=1
 	ui.refresh()
 	queue_redraw()
 
+func grant_hint() -> void:
+	hints_left+=1
+	show_hint()
+
+# 3 stars: the minimum number of mirrors and no hints. Each extra mirror or
+# using hints costs a star (minimum 1).
 func rating() -> int:
-	var result:=3 if mirrors.size()<=int(level_data.par) else (2 if mirrors.size()<=int(level_data.par)+2 else 1)
-	return mini(result,2) if hints_used>0 else result
+	var result:=3
+	if mirrors.size()>int(level_data.par): result-=1
+	if hints_used>0: result-=1
+	return maxi(result,1)
 
 func _update_board() -> void:
 	var previously_won:=level_won
@@ -231,6 +299,7 @@ func _update_board() -> void:
 	_sync_pieces()
 	if level_won and not previously_won:
 		Aura.sound("win")
+		Aura.haptic(80)
 		if level_number>0:
 			Aura.complete(level_number,rating())
 			if ui: get_tree().create_timer(SUCCESS_DELAY).timeout.connect(ui.show_success)
@@ -286,6 +355,12 @@ func _recalculate_rays() -> void:
 		var exit_t := ray_start.distance_to(end_point)
 		nearest_t = exit_t
 
+		for wall in walls:
+			var t_wall := _ray_rect(ray_start, ray_direction, Rect2(Vector2(wall) * GRID_SIZE, Vector2.ONE * GRID_SIZE))
+			if t_wall < nearest_t:
+				nearest_t = t_wall
+				end_point = ray_start + ray_direction * nearest_t
+
 		for i in range(mirrors.size()):
 			var mirror: Dictionary = mirrors[i]
 			var center := grid_center(int(mirror["grid_x"]), int(mirror["grid_y"]))
@@ -335,6 +410,25 @@ func _ray_segment_intersection(origin: Vector2, direction: Vector2, center: Vect
 		return Vector2(-1.0, -1.0)
 	return Vector2(point.x, t)
 
+# Distance along the ray to a wall cell, or INF (slab method).
+func _ray_rect(origin: Vector2, direction: Vector2, rect: Rect2) -> float:
+	var t_min := -INF
+	var t_max := INF
+	for axis in range(2):
+		var o := origin[axis]
+		var d := direction[axis]
+		var lo := rect.position[axis]
+		var hi := rect.end[axis]
+		if absf(d) < 0.0001:
+			if o < lo or o > hi: return INF
+		else:
+			var t1 := (lo - o) / d
+			var t2 := (hi - o) / d
+			t_min = maxf(t_min, minf(t1, t2))
+			t_max = minf(t_max, maxf(t1, t2))
+	if t_max < t_min or t_min <= RAY_EPSILON: return INF
+	return t_min
+
 func _board_exit(origin: Vector2, direction: Vector2) -> Vector2:
 	var candidates: Array[float] = []
 	if direction.x > 0.0001:
@@ -352,4 +446,3 @@ func _board_exit(origin: Vector2, direction: Vector2) -> Vector2:
 	if is_inf(t):
 		return origin + direction * 1000.0
 	return origin + direction * t
-

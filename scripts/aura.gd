@@ -19,9 +19,19 @@ signal layout_changed
 # Wide phones (iPhone ~19.5:9) get extra width instead of black bars: the
 # 1280x800 layout is centred and only the background fills the sides.
 const DESIGN := Vector2(1280, 800)
+const LEVEL_COUNT := 8
+const GAME_SCENE := "res://scenes/game.tscn"
 var margin_x := 0.0
-var best: Array = [0, 0]
+# Best reward (0-3 stars) per chapter; chapters unlock one after another.
+var best: Array = []
 var unlocked := 1
+var current_level := 1
+# Page the main menu opens on ("chapters" when returning from a level).
+var menu_page := ""
+var vibration := true
+var tilt_rotate := false
+var show_fps := false
+var perf: CanvasLayer
 var sfx_volume := 0.7
 var music_volume := 0.3
 var reduced_motion := false
@@ -31,7 +41,11 @@ var music: AudioStreamPlayer
 var voices: Dictionary = {}
 
 func _ready() -> void:
+	best.resize(LEVEL_COUNT)
+	best.fill(0)
 	load_progress()
+	perf = load("res://scripts/perf_monitor.gd").new()
+	add_child(perf)
 	get_tree().root.size_changed.connect(apply_layout)
 	apply_layout()
 	music = AudioStreamPlayer.new()
@@ -65,6 +79,8 @@ func apply_motion(root: Node) -> void:
 		player.speed_scale = 0.0 if reduced_motion else 1.0
 	for sprite in root.find_children("*", "AnimatedSprite2D", true, false):
 		sprite.speed_scale = 0.0 if reduced_motion else 1.0
+	for particles in root.find_children("*", "CPUParticles2D", true, false):
+		particles.speed_scale = 0.0 if reduced_motion else 1.0
 
 func apply_audio() -> void:
 	music.volume_db = linear_to_db(maxf(music_volume, 0.0001)) - 7.0
@@ -79,9 +95,15 @@ func load_progress() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SAVE_PATH) != OK:
 		return
-	for i in range(2):
-		best[i] = clampi(int(cfg.get_value("progress", "stars_%d" % i, 0)), 0, 3)
-	unlocked = 2 if int(best[0]) > 0 else 1
+	for i in range(LEVEL_COUNT):
+		best[i] = clampi(int(cfg.get_value("progress", "level_%d" % (i + 1), 0)), 0, 3)
+	# Assignment 3 saves: chapter 1 is unchanged, the old chapter 2 was replaced.
+	if cfg.has_section_key("progress", "stars_0") and best[0] == 0:
+		best[0] = clampi(int(cfg.get_value("progress", "stars_0", 0)), 0, 3)
+	_update_unlocked()
+	vibration = bool(cfg.get_value("settings", "vibration", true))
+	tilt_rotate = bool(cfg.get_value("settings", "tilt_rotate", false))
+	show_fps = bool(cfg.get_value("settings", "show_fps", false))
 	sfx_volume = clampf(float(cfg.get_value("settings", "sfx", 0.7)), 0.0, 1.0)
 	music_volume = clampf(float(cfg.get_value("settings", "music", 0.3)), 0.0, 1.0)
 	reduced_motion = bool(cfg.get_value("settings", "reduced_motion", false))
@@ -89,8 +111,11 @@ func load_progress() -> void:
 
 func save_progress() -> void:
 	var cfg := ConfigFile.new()
-	for i in range(2):
-		cfg.set_value("progress", "stars_%d" % i, best[i])
+	for i in range(LEVEL_COUNT):
+		cfg.set_value("progress", "level_%d" % (i + 1), best[i])
+	cfg.set_value("settings", "vibration", vibration)
+	cfg.set_value("settings", "tilt_rotate", tilt_rotate)
+	cfg.set_value("settings", "show_fps", show_fps)
 	cfg.set_value("settings", "sfx", sfx_volume)
 	cfg.set_value("settings", "music", music_volume)
 	cfg.set_value("settings", "reduced_motion", reduced_motion)
@@ -99,13 +124,32 @@ func save_progress() -> void:
 
 func complete(level: int, rating: int) -> void:
 	best[level - 1] = maxi(int(best[level - 1]), rating)
-	unlocked = 2
+	_update_unlocked()
 	save_progress()
 
 func reset_progress() -> void:
-	best = [0, 0]
-	unlocked = 1
+	best.fill(0)
+	_update_unlocked()
 	save_progress()
+
+func _update_unlocked() -> void:
+	unlocked = 1
+	while unlocked < LEVEL_COUNT and int(best[unlocked - 1]) > 0:
+		unlocked += 1
+
+func total_stars() -> int:
+	var total := 0
+	for value in best: total += int(value)
+	return total
+
+# 0 opens Creative Studio; 1..LEVEL_COUNT open a chapter.
+func start_level(number: int) -> void:
+	if number > unlocked: return
+	current_level = number
+	get_tree().change_scene_to_file(GAME_SCENE)
+
+func haptic(ms: int) -> void:
+	if vibration: Input.vibrate_handheld(ms)
 
 func label(parent: Node, text: String, rect: Rect2, size: int = 24, color: Color = INK) -> Label:
 	var item := Label.new()
@@ -169,47 +213,59 @@ func panel(parent: Node, rect: Rect2) -> Panel:
 	parent.add_child(item)
 	return item
 
+func toggle(parent: Node, rect: Rect2, title: String, value: bool, on_change: Callable) -> Button:
+	var item := button(parent, "", rect, func(): pass, 24)
+	item.toggle_mode = true
+	item.button_pressed = value
+	item.text = title + (": On" if value else ": Off")
+	item.toggled.connect(func(state: bool):
+		item.text = title + (": On" if state else ": Off")
+		on_change.call(state))
+	return item
+
 func open_settings(parent: Node, on_close: Callable = Callable()) -> Control:
 	var overlay := ColorRect.new()
 	overlay.color = Color(0.15, 0.12, 0.22, 0.55)
 	overlay.position = Vector2(-640, 0)
 	overlay.size = Vector2(2560, 800)
 	parent.add_child(overlay)
-	var box := panel(overlay, Rect2(980, 90, 600, 610))
-	label(box, "Settings", Rect2(32, 20, 536, 50), 34)
+	var box := panel(overlay, Rect2(780, 50, 1000, 650))
+	label(box, "Settings", Rect2(32, 16, 900, 50), 34)
 	for i in range(2):
-		var y := 96 + i * 92
-		label(box, "Sound effects" if i == 0 else "Music", Rect2(32, y + 18, 250, 40), 26)
+		var y := 86 + i * 92
+		label(box, "Sound effects" if i == 0 else "Music", Rect2(32, y + 18, 200, 40), 26)
 		if i == 1 and not has_music():
-			label(box, "not added yet", Rect2(300, y + 20, 270, 40), 24, MUTED)
+			label(box, "not added yet", Rect2(236, y + 20, 240, 40), 24, MUTED)
 			continue
-		var value := label(box, "", Rect2(386, y + 18, 104, 40), 26)
+		var value := label(box, "", Rect2(316, y + 18, 84, 40), 26)
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var show := func(): value.text = "%d%%" % roundi((sfx_volume if i == 0 else music_volume) * 100)
 		show.call()
 		for step in [-0.1, 0.1]:
-			button(box, "–" if step < 0 else "+", Rect2(300 if step < 0 else 496, y, 80, 76), func():
+			button(box, "–" if step < 0 else "+", Rect2(236 if step < 0 else 400, y, 80, 76), func():
 				if i == 0: sfx_volume = clampf(snappedf(sfx_volume + step, 0.1), 0.0, 1.0)
 				else: music_volume = clampf(snappedf(music_volume + step, 0.1), 0.0, 1.0)
 				apply_audio()
 				show.call()
 				if i == 0: sound("rotate"), 34)
-	var motion := button(box, "", Rect2(32, 290, 536, 76), func(): pass)
-	motion.toggle_mode = true
-	motion.button_pressed = reduced_motion
-	motion.text = "Reduce animation: " + ("On" if reduced_motion else "Off")
-	motion.toggled.connect(func(value: bool):
-		reduced_motion = value
-		motion.text = "Reduce animation: " + ("On" if value else "Off")
+	toggle(box, Rect2(32, 270, 448, 76), "Reduce animation", reduced_motion, func(v: bool):
+		reduced_motion = v
 		motion_changed.emit())
-	var tips := button(box, "", Rect2(32, 382, 536, 76), func(): pass)
-	tips.toggle_mode = true
-	tips.button_pressed = tutorial
-	tips.text = "Tutorial guidance: " + ("On" if tutorial else "Off")
-	tips.toggled.connect(func(value: bool):
-		tutorial = value
-		tips.text = "Tutorial guidance: " + ("On" if value else "Off"))
-	button(box, "Save & return", Rect2(32, 500, 536, 80), func():
+	toggle(box, Rect2(32, 362, 448, 76), "Tutorial tips", tutorial, func(v: bool): tutorial = v)
+	toggle(box, Rect2(520, 86, 448, 76), "Vibration", vibration, func(v: bool):
+		vibration = v
+		haptic(40))
+	toggle(box, Rect2(520, 178, 448, 76), "Tilt to rotate", tilt_rotate, func(v: bool): tilt_rotate = v)
+	toggle(box, Rect2(520, 270, 448, 76), "Show FPS", show_fps, func(v: bool):
+		show_fps = v
+		perf.refresh_visibility())
+	button(box, "Performance test (60 s)", Rect2(520, 362, 448, 76), func():
+		save_progress()
+		overlay.queue_free()
+		if on_close.is_valid(): on_close.call()
+		perf.start_test(60.0), 24)
+	label(box, "Tilt to rotate: tilt the phone left or right to turn the selected mirror.", Rect2(32, 456, 936, 40), 22, MUTED)
+	button(box, "Save & return", Rect2(32, 530, 936, 80), func():
 		save_progress()
 		overlay.queue_free()
 		if on_close.is_valid(): on_close.call())

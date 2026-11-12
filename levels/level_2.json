@@ -1,72 +1,58 @@
 {
-  "title": "A Thread of Memory",
-  "subtitle": "One beam. Two stars. A shared path.",
-  "source": [
-    8,
-    1
+ "title": "Twin Lights",
+ "subtitle": "Two stars, one bend at a time.",
+ "source": [
+  14,
+  1
+ ],
+ "stars": [
+  [
+   14,
+   4
   ],
-  "stars": [
-    [
-      6,
-      7
-    ],
-    [
-      14,
-      7
-    ]
-  ],
-  "par": 3,
-  "solution": [
-    [
-      8,
-      3,
-      135
-    ],
-    [
-      4,
-      3,
-      135
-    ],
-    [
-      4,
-      7,
-      45
-    ]
-  ],
-  "hints": [
-    "Turn the beam left before it reaches the bottom row of stars.",
-    "Try mirrors on the three glowing cells.",
-    "Set those mirrors to 135°, 135° and 45°. Both stars lie on the final rightward beam."
-  ],
-  "hint_cells": [
-    [],
-    [
-      [
-        8,
-        3
-      ],
-      [
-        4,
-        3
-      ],
-      [
-        4,
-        7
-      ]
-    ],
-    [
-      [
-        8,
-        3
-      ],
-      [
-        4,
-        3
-      ],
-      [
-        4,
-        7
-      ]
-    ]
+  [
+   15,
+   2
   ]
+ ],
+ "walls": [
+  [
+   7,
+   4
+  ],
+  [
+   15,
+   7
+  ],
+  [
+   6,
+   5
+  ],
+  [
+   1,
+   3
+  ],
+  [
+   8,
+   7
+  ],
+  [
+   8,
+   3
+  ]
+ ],
+ "par": 2,
+ "max_mirrors": 3,
+ "solution": [
+  [
+   14,
+   5,
+   45
+  ],
+  [
+   15,
+   5,
+   135
+  ]
+ ]
 }
