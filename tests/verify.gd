@@ -49,7 +49,7 @@ func _ready() -> void:
 	var pause_rect := Rect2()
 	for node in one.ui.find_children("*","Button",true,false):
 		if node.icon and node.icon.resource_path.ends_with("pause.svg"): pause_rect=node.get_global_rect()
-	check(pause_rect.position.y<20 and pause_rect.end.x>Aura.DESIGN.x-20,"pause button sits in the top-right corner")
+	check(pause_rect.position.y<20 and pause_rect.position.x<20,"pause button sits in the top-left corner")
 	for key in ["place","rotate","win"]:
 		check(Aura.voices[key].stream != null and Aura.SOUNDS[key].begins_with("res://assets/audio/kenney/"), "sound '%s' is a credited Kenney CC0 file" % key)
 	check(Aura.has_music() and Aura.music.playing, "background music loads and plays")
@@ -184,6 +184,15 @@ func _ready() -> void:
 	check(menu.content.get_child_count()>5,"all menu screens construct")
 	await get_tree().process_frame
 	check_readable(menu, "main menu")
+	var first:String=menu.character.emotion
+	var tap := InputEventMouseButton.new()
+	tap.button_index = MOUSE_BUTTON_LEFT
+	tap.pressed = true
+	for node in menu.content.get_children():
+		if node.get_class()=="Control" and node.size==Vector2(300,440): node.gui_input.emit(tap)
+	var second:String=menu.character.emotion
+	menu.character.next_emotion()
+	check(second!=first and menu.character.emotion!=second and menu.character.get_node("Body").animation==menu.character.emotion,"tapping the lightkeeper changes her emotion (%s -> %s -> %s)" % [first,second,menu.character.emotion])
 	menu.show_chapters()
 	await get_tree().process_frame
 	check_readable(menu, "chapter select")

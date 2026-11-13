@@ -2,7 +2,7 @@
 
 AURA is a relaxing light-reflection puzzle: place and turn mirrors on a grid to bend the light beam.
 
-**Version 4.2** (Assignment 4) — Android APK and iOS build, 8 chapters.
+**Version 4.3** (Assignment 4) — Android APK and iOS build, 8 chapters.
 
 ## Team
 
@@ -20,7 +20,7 @@ Auto-tests are located in the `tests/` folder. To run them, open `res://tests/ve
 godot --headless --path GameProject res://tests/verify.tscn
 ```
 
-All 52 checks should print PASS.
+All 53 checks should print PASS.
 
 Every level is checked by `tools/level_solver.py` (Python 3): `python3 tools/level_solver.py check-all` prints the minimum number of mirrors for each chapter.
 
@@ -47,7 +47,8 @@ To build the game for iPhone:
 - Round arrow icons (right side) — turn the selected mirror by 45°
 - Undo / Delete / Reset icons (left side) — undo the last action, remove the selected mirror, clear the board
 - Light bulb icon — hint (1 free per chapter; a demo "rewarded ad" gives one more)
-- Pause icon — Resume, Restart, Chapters, Settings, Main menu
+- Pause icon (top-left corner) — Resume, Restart, Chapters, Settings, Main menu
+- Main menu: tap the lightkeeper to change her mood (happy → sad → surprised → calm)
 - Optional: Tilt to rotate (Settings) — tilt the phone left or right to turn the selected mirror
 
 **3 stars:** Complete a chapter with the minimum number of mirrors (found by the level solver) and no hints. One extra mirror costs a star, using hints costs a star (minimum 1 star). Each chapter allows only one mirror more than the minimum.
@@ -118,7 +119,7 @@ Light beam and reflections (file: `scripts/game_scene.gd`, function: `_recalcula
 
 **Music** — assembled by us in Apple GarageBand with the "Set Free Melodic Synth" loop and the Grand Piano instrument, used under the GarageBand licence.
 
-**Art** — The lightkeeper (`assets/art/lightkeeper/`, 6 frames: idle, breath, blink, happy, jump, surprised) is our own elf-mage design from Assignment 2, where it was drawn from shapes in Godot code. For Assignment 4 the same shapes were rebuilt as layered Photoshop scripts (`tools/photoshop/`, one per pose) and the 6 frames were rendered from these shapes. The star icon was created using image generation in ChatGPT. The background and simple game figures were created programmatically using ChatGPT. Images were prepared in PNG format matching game dimensions. We did not draw these images manually in Photoshop.
+**Art** — The lightkeeper (`assets/art/lightkeeper/`, 8 frames: idle, breath, blink, happy, jump, surprised, sad ×2) is our own elf-mage design from Assignment 2, where it was drawn from shapes in Godot code. For Assignment 4 the same shapes were rebuilt as layered Photoshop scripts (`tools/photoshop/`, one per pose) and the 8 frames were rendered from these shapes. The star icon was created using image generation in ChatGPT. The background and simple game figures were created programmatically using ChatGPT. Images were prepared in PNG format matching game dimensions. We did not draw these images manually in Photoshop.
 
 **Engine and fonts** — The game is made in Godot. Engine licence — MIT: https://godotengine.org/license/ The standard Godot font is used for the interface. The AURA title uses Cinzel by The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel), SIL Open Font License 1.1 (`assets/fonts/Cinzel_OFL.txt`).
 

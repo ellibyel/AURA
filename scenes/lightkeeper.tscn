@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/lightkeeper.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/art/lightkeeper/idle_1.png" id="2"]
@@ -7,6 +7,9 @@
 [ext_resource type="Texture2D" path="res://assets/art/lightkeeper/idle_blink.png" id="5"]
 [ext_resource type="Texture2D" path="res://assets/art/lightkeeper/happy_1.png" id="6"]
 [ext_resource type="Texture2D" path="res://assets/art/lightkeeper/happy_2.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/art/lightkeeper/sad_1.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/art/lightkeeper/sad_2.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/art/lightkeeper/idle_surprised.png" id="10"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_lightkeeper"]
 animations = [{
@@ -52,6 +55,25 @@ animations = [{
 "loop": true,
 "name": &"happy",
 "speed": 2.5
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9")
+}],
+"loop": true,
+"name": &"sad",
+"speed": 1.5
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("10")
+}],
+"loop": true,
+"name": &"surprised",
+"speed": 1.0
 }]
 
 [sub_resource type="Animation" id="Animation_float"]
@@ -69,6 +91,27 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 0,
 "values": [Vector2(0, 0), Vector2(0, 3), Vector2(0, 0), Vector2(0, -3)]
+}
+
+[sub_resource type="Animation" id="Animation_pop"]
+resource_name = "pop"
+length = 0.45
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Body:scale")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.25, 0.45),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0.5, 0.5), Vector2(0.56, 0.44), Vector2(0.46, 0.55), Vector2(0.5, 0.5)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_react"]
+_data = {
+&"pop": SubResource("Animation_pop")
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_lightkeeper"]
@@ -90,3 +133,8 @@ libraries = {
 &"": SubResource("AnimationLibrary_lightkeeper")
 }
 autoplay = &"float"
+
+[node name="React" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_react")
+}

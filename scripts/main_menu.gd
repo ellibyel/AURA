@@ -39,8 +39,17 @@ func show_home() -> void:
 	Aura.button(content,"Creative studio",Rect2(90,548,380,76),func(): start_level(0))
 	Aura.button(content,"Settings",Rect2(90,636,183,76),func(): Aura.open_settings(self))
 	Aura.button(content,"Credits",Rect2(287,636,183,76),show_credits)
-	var tag := Aura.panel(content,Rect2(855,612,320,52))
-	Aura.label(tag,"Your lightkeeper",Rect2(0,6,320,40),24,Aura.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# Tap the lightkeeper to change her mood.
+	var touch := Control.new()
+	touch.position = Vector2(870, 210)
+	touch.size = Vector2(300, 440)
+	touch.mouse_filter = Control.MOUSE_FILTER_STOP
+	touch.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			character.next_emotion())
+	content.add_child(touch)
+	var tip := Aura.label(content,"tap her",Rect2(870,652,300,34),22,Aura.MUTED)
+	tip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	Aura.label(content,"%d CHAPTERS  ·  ★ %d / %d  ·  NO TIMER" % [Aura.LEVEL_COUNT, Aura.total_stars(), Aura.LEVEL_COUNT * 3],Rect2(90,722,970,34),22,Aura.MUTED)
 	if not Aura.save_error.is_empty(): Aura.label(content,Aura.save_error,Rect2(560,84,560,34),22)
 

@@ -26,25 +26,28 @@ func _ready() -> void:
 	var edge:=_safe_edges()
 	var left:=edge.x
 	var right:=edge.y
-	# Top strip: compact chips on the left, pause and hint on the right.
+	var top:=_safe_top()
+	# Top strip: pause in the top-left corner (players looked for it there),
+	# then compact chips; hint on the right. All inside the safe area.
+	_icon_button("pause",Rect2(left,top,80,80),open_pause)
+	var cx:=left+96
 	if game.level_number>0:
-		chips.append(_chip(Vector2(left,6),"Ch %d · %s" % [game.level_number,game.level_data.title]))
-		chips.append(_chip(Vector2(left+430,6),""))
-		chips.append(_chip(Vector2(left+600,6),""))
+		chips.append(_chip(Vector2(cx,top),"Ch %d · %s" % [game.level_number,game.level_data.title]))
+		chips.append(_chip(Vector2(cx+430,top),""))
+		chips.append(_chip(Vector2(cx+600,top),""))
 	else:
-		chips.append(_chip(Vector2(left,6),"Creative Studio"))
+		chips.append(_chip(Vector2(cx,top),"Creative Studio"))
 		var names:Array=["Mirror","Target","Source"]
 		var keys:Array=["mirror","star","source"]
 		for i in range(3):
-			mutations.append(Aura.button(self,names[i],Rect2(left+260+i*132,4,120,58),func():
+			mutations.append(Aura.button(self,names[i],Rect2(cx+260+i*132,top-2,120,58),func():
 				game.tool=keys[i]
 				game.message="Tool: "+names[i]+". Tap a grid cell."
 				refresh(),24))
-		Aura.button(self,"Save",Rect2(left+660,4,110,58),game.save_layout,24)
-		Aura.button(self,"Load",Rect2(left+782,4,110,58),game.load_layout,24)
-	_icon_button("pause",Rect2(right-80,10,80,80),open_pause)
+		Aura.button(self,"Save",Rect2(cx+660,top-2,110,58),game.save_layout,24)
+		Aura.button(self,"Load",Rect2(cx+782,top-2,110,58),game.load_layout,24)
 	if game.level_number>0:
-		hint_button=_icon_button("hint",Rect2(right-80,104,80,80),game.show_hint)
+		hint_button=_icon_button("hint",Rect2(right-80,top,80,80),game.show_hint)
 		hint_badge=Aura.label(hint_button,"",Rect2(48,-6,40,34),22,Color.WHITE)
 		hint_badge.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 		var badge:=StyleBoxFlat.new()
@@ -74,6 +77,17 @@ func _ready() -> void:
 
 # Left and right x positions of the visible screen (design coordinates),
 # moved in by the iPhone safe area so nothing sits under the Dynamic Island.
+# Top inset (status bar, notch or camera cut-out) in design pixels, 6..14.
+func _safe_top() -> float:
+	var view:=get_viewport().get_visible_rect().size
+	var window:=Vector2(DisplayServer.window_get_size())
+	var safe:=Rect2(DisplayServer.get_display_safe_area())
+	if window.y<=0 or safe.size.y<=0: return 6.0
+	var inset:=maxf(0.0,safe.position.y-DisplayServer.window_get_position().y)*view.y/window.y
+	# Phones in landscape have no top cut-out (the Dynamic Island is on a side),
+	# so the inset stays small; the clamp keeps the chips above the board.
+	return clampf(inset+6.0,6.0,14.0)
+
 func _safe_edges() -> Vector2:
 	var view:=get_viewport().get_visible_rect().size
 	var window:=Vector2(DisplayServer.window_get_size())
