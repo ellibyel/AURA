@@ -2,7 +2,7 @@
 
 AURA is a relaxing light-reflection puzzle: place and turn mirrors on a grid to bend the light beam.
 
-**Version 4.0** (Assignment 4) — Android APK and iOS build, 8 chapters.
+**Version 4.1** (Assignment 4) — Android APK and iOS build, 8 chapters.
 
 ## Team
 
@@ -104,7 +104,6 @@ Light beam and reflections (file: `scripts/game_scene.gd`, function: `_recalcula
 ## Known limitations and unfinished work
 
 - Currently, 2 chapters out of the planned 25 are ready.
-- In the prepared asset set, the fairy currently has only one pose across all six files. Individual blinking and joy frames still need to be made.
 - The iPhone application needs to be re-signed every seven days (the development build must be reinstalled every 7 days).
 
 ## Credits and licences
@@ -119,7 +118,7 @@ Light beam and reflections (file: `scripts/game_scene.gd`, function: `_recalcula
 
 **Music** — assembled by us in Apple GarageBand with the "Set Free Melodic Synth" loop and the Grand Piano instrument, used under the GarageBand licence.
 
-**Art** — The fairy and star icon were created using image generation in ChatGPT. The background and simple game figures were created programmatically using ChatGPT. Images were prepared in PNG format matching game dimensions. We did not draw these images manually in Photoshop.
+**Art** — The lightkeeper (`assets/art/lightkeeper/`, 6 frames: idle, breath, blink, happy, jump, surprised) is our own elf-mage design from Assignment 2, where it was drawn from shapes in Godot code. For Assignment 4 the same shapes were rebuilt as layered Photoshop scripts (`tools/photoshop/`, one per pose) and the 6 frames were rendered from these shapes. The star icon was created using image generation in ChatGPT. The background and simple game figures were created programmatically using ChatGPT. Images were prepared in PNG format matching game dimensions. We did not draw these images manually in Photoshop.
 
 **Engine and font** — The game is made in Godot. Engine licence — MIT: https://godotengine.org/license/ The standard Godot font is used.
 
@@ -129,6 +128,7 @@ Light beam and reflections (file: `scripts/game_scene.gd`, function: `_recalcula
 
 - The Assignment 2 code was written with the help of ChatGPT/Codex.
 - ChatGPT/Codex helped us identify potential risks, choose suitable iPhone test cases, and organize how to document them. We also used AI to review and assess our interface.
+- Claude Code wrote the Photoshop shape scripts and rendered the lightkeeper frames for Assignment 4.
 - Claude Code helped us learn Godot and its programming language, and supported code changes, the iOS build, and testing for Assignment 3.
 - Diana created the interface and game flow.
 - Khalida created the visuals, animations, and sound.
