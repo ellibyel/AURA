@@ -34,16 +34,15 @@ func start_test(seconds: float) -> void:
 	elapsed = 0.0
 	frame_times.clear()
 	peak_memory = 0.0
-	var scene := get_tree().current_scene
-	scene_name = scene.name if scene else "?"
-	if scene and "level_number" in scene:
-		scene_name = "Chapter %d" % scene.level_number if scene.level_number > 0 else "Creative Studio"
+	scene_name = ""
+	_note_scene()
 	running = true
 	refresh_visibility()
 
 func _process(delta: float) -> void:
 	var memory := Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0
 	if running:
+		_note_scene()
 		elapsed += delta
 		frame_times.append(delta * 1000.0)
 		peak_memory = maxf(peak_memory, memory)
@@ -55,6 +54,14 @@ func _process(delta: float) -> void:
 		if running: text += " · test %d s" % ceili(duration - elapsed)
 		overlay.text = text
 	refresh_visibility()
+
+# Every screen visited during the test, e.g. "MainMenu > Chapter 6".
+func _note_scene() -> void:
+	var scene := get_tree().current_scene
+	var name: String = str(scene.name) if scene else "?"
+	if scene and "level_number" in scene:
+		name = "Chapter %d" % scene.level_number if scene.level_number > 0 else "Creative Studio"
+	if not scene_name.ends_with(name): scene_name += (" > " if scene_name else "") + name
 
 func summary() -> Dictionary:
 	var total := 0.0
@@ -80,7 +87,7 @@ func _show_result() -> void:
 		if file.get_length() == 0:
 			file.store_line("date,device,os,scene,seconds,frames,avg_fps,avg_frame_ms,max_frame_ms,slow_frames_pct,peak_memory_mb")
 		file.seek_end()
-		file.store_line("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s" % [Time.get_datetime_string_from_system(), r.device, r.os, r.scene, r.seconds, r.frames, r.avg_fps, r.avg_ms, r.max_ms, r.slow_pct, r.memory_mb])
+		file.store_line("%s,\"%s\",%s,\"%s\",%s,%s,%s,%s,%s,%s,%s" % [Time.get_datetime_string_from_system(), r.device, r.os, r.scene, r.seconds, r.frames, r.avg_fps, r.avg_ms, r.max_ms, r.slow_pct, r.memory_mb])
 	result_box = Aura.panel(self, Rect2(Aura.margin_x + 290, 120, 700, 520))
 	Aura.label(result_box, "Performance test result", Rect2(24, 16, 650, 46), 32)
 	var lines := "Device: %s (%s)\\nScene: %s\\nDuration: %s s, %d frames\\nAverage: %s FPS (%s ms per frame)\\nWorst frame: %s ms\\nFrames slower than 55 FPS: %s %%\\nPeak memory: %s MB\\nTool: Godot Performance monitors, %s" % [r.device, r.os, r.scene, r.seconds, r.frames, r.avg_fps, r.avg_ms, r.max_ms, r.slow_pct, r.memory_mb, Time.get_datetime_string_from_system(false, true)]
