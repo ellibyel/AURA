@@ -9,7 +9,11 @@ func level(n: int) -> Node:
 	var l = load(Aura.GAME_SCENE).instantiate()
 	add_child(l)
 	return l
+var saved: PackedByteArray
+var had_save := false
 func _ready() -> void:
+	had_save = FileAccess.file_exists(Aura.SAVE_PATH)
+	if had_save: saved = FileAccess.get_file_as_bytes(Aura.SAVE_PATH)
 	Aura.reset_progress()
 	for i in range(Aura.LEVEL_COUNT - 2): Aura.complete(i + 1, 3 - i % 3)
 	var menu = load("res://scenes/main_menu.tscn").instantiate()
@@ -41,5 +45,10 @@ func _ready() -> void:
 	w.ui.open_pause()
 	Aura.open_settings(w.ui)
 	await shot("settings")
-	Aura.reset_progress()
+	# Put the player's real progress back.
+	if had_save:
+		var file := FileAccess.open(Aura.SAVE_PATH, FileAccess.WRITE)
+		file.store_buffer(saved)
+		file.close()
+	else: DirAccess.remove_absolute(Aura.SAVE_PATH)
 	get_tree().quit()

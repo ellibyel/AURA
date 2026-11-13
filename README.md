@@ -2,7 +2,7 @@
 
 AURA is a relaxing light-reflection puzzle: place and turn mirrors on a grid to bend the light beam.
 
-**Version 4.3** (Assignment 4) — Android APK and iOS build, 8 chapters.
+**Version 4.4** (Assignment 4) — Android APK and iOS build, 8 chapters.
 
 ## Team
 
@@ -20,7 +20,7 @@ Auto-tests are located in the `tests/` folder. To run them, open `res://tests/ve
 godot --headless --path GameProject res://tests/verify.tscn
 ```
 
-All 53 checks should print PASS.
+All 54 checks should print PASS.
 
 Every level is checked by `tools/level_solver.py` (Python 3): `python3 tools/level_solver.py check-all` prints the minimum number of mirrors for each chapter.
 

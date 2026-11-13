@@ -4,10 +4,21 @@ var backups: Dictionary = {}
 func check(value: bool, description: String) -> void:
 	if not value:
 		push_error("FAIL: "+description)
+		restore_saves()
 		get_tree().quit(1)
 		assert(value,description)
 	checks += 1
 	print("PASS: "+description)
+# Puts the player's real save files back (also after a failed check).
+func restore_saves() -> void:
+	for path in backups:
+		if backups[path] == null: DirAccess.remove_absolute(path)
+		else:
+			var file := FileAccess.open(path,FileAccess.WRITE)
+			file.store_buffer(backups[path])
+			file.close()
+	Aura.best.fill(0)
+	Aura.load_progress()
 func spawn_level(number: int) -> Node:
 	Aura.current_level = number
 	var level=load(Aura.GAME_SCENE).instantiate()
@@ -105,6 +116,7 @@ func _ready() -> void:
 	two.board_tap(two.grid_center(extra[0][0],extra[0][1]))
 	play_solution(two)
 	check(two.level_won and two.rating()==2,"one extra mirror costs one reward star")
+	check(Aura.best[1]==3,"a weaker run keeps the chapter's best result")
 	two.queue_free()
 	await get_tree().process_frame
 	var three=spawn_level(3)
@@ -198,11 +210,7 @@ func _ready() -> void:
 	check_readable(menu, "chapter select")
 	menu.queue_free()
 	await get_tree().process_frame
-	for path in backups:
-		if backups[path] == null: DirAccess.remove_absolute(path)
-		else:
-			var file := FileAccess.open(path,FileAccess.WRITE)
-			file.store_buffer(backups[path])
+	restore_saves()
 	print("AURA VERIFICATION COMPLETE: %d checks" % checks)
 	if Aura.music: Aura.music.stop()
 	for voice in Aura.voices.values(): voice.stop()

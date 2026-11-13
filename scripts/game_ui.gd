@@ -174,7 +174,10 @@ func show_success() -> void:
 	var last:bool=game.level_number>=Aura.LEVEL_COUNT
 	Aura.label(box,"All chapters complete" if last else "Chapter %d complete" % game.level_number,Rect2(20,20,660,56),38).horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	Aura.label(box,"★".repeat(game.rating())+"☆".repeat(3-game.rating()),Rect2(20,82,660,70),56,Color("7d5f2a")).horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	# The chapter keeps its best result, so a weaker run never lowers it; say so.
+	var best:int=int(Aura.best[game.level_number-1])
 	var text: String="Mirrors used: %d (best possible: %d)" % [game.mirrors.size(),int(game.level_data.par)]
+	text+="\nThis run: %d ★ · Chapter best: %d ★" % [game.rating(),best] if best>game.rating() else "\nNew chapter best: %d ★" % best
 	if game.hints_used>0: text+="\nHints used: %d" % game.hints_used
 	text+="\nTotal stars: %d / %d" % [Aura.total_stars(),Aura.LEVEL_COUNT*3]
 	if not Aura.save_error.is_empty():text+="\n"+Aura.save_error

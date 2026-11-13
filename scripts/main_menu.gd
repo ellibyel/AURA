@@ -58,6 +58,7 @@ func show_chapters() -> void:
 	character.visible = false
 	Aura.label(content,"Chapters",Rect2(80,40,600,64),44)
 	Aura.label(content,"★ %d / %d" % [Aura.total_stars(), Aura.LEVEL_COUNT * 3],Rect2(900,52,300,50),32,Color("7d5f2a")).horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	Aura.label(content,"Cards show your best result in each chapter.",Rect2(330,62,560,34),22,Aura.MUTED)
 	for i in range(Aura.LEVEL_COUNT):
 		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://levels/level_%d.json" % (i + 1)))
 		var open := i < Aura.unlocked
