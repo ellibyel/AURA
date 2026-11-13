@@ -7,8 +7,8 @@ AURA is a relaxing light-reflection puzzle: place and turn mirrors on a grid to 
 ## Team
 
 - **Elmira** — mechanics & levels (beam reflection, undo, star rewards; level data `level_1/2.json`; demo: Chapter 1 → Chapter 2)
-- **Diana** — interface & game flow (bigger buttons, contrast, pause; iPhone layout, settings, saving; demo: pause, restart, rotation)
-- **Khalida** — visuals, animation & sound (editor animation, particles; sounds, music, Reduce animation; demo: animations, sound on silent)
+- **Khalida** — interface & game flow (bigger buttons, contrast, pause; iPhone layout, settings, saving; demo: pause, restart, rotation)
+- **Diana** — visuals, animation & sound (editor animation, particles; sounds, music, Reduce animation; demo: animations, sound on silent)
 
 ## Requirements and opening
 
@@ -131,6 +131,6 @@ Light beam and reflections (file: `scripts/game_scene.gd`, function: `_recalcula
 - ChatGPT/Codex helped us identify potential risks, choose suitable iPhone test cases, and organize how to document them. We also used AI to review and assess our interface.
 - Claude Code wrote the Photoshop shape scripts and rendered the lightkeeper frames for Assignment 4.
 - Claude Code helped us learn Godot and its programming language, and supported code changes, the iOS build, and testing for Assignment 3.
-- Diana created the interface and game flow.
-- Khalida created the visuals, animations, and sound.
+- Khalida created the interface and game flow.
+- Diana created the visuals, animations, and sound.
 - Elmira designed the mechanics and levels.
