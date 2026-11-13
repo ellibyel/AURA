@@ -68,6 +68,8 @@ After Assignment 2, we improved the game based on feedback and phone testing:
 - Assignment 3 feedback (difficulty): 8 chapters instead of 2, stone walls, a mirror limit and stricter stars. Every level is checked by a solver; most have one to four possible minimum solutions.
 - Animated background (drifting scenery, glowing moon, fireflies), vibration feedback, optional tilt controls, chapter select with stars, demo rewarded ad, built-in performance test (Settings → Performance test).
 
+All feedback (instructor and players), what we changed and how we checked it: [FEEDBACK.md](FEEDBACK.md).
+
 ## Mobile interface
 
 - **Buttons:** Large 100 px buttons in one row at the bottom; Rotate buttons on the right, under the thumb.
