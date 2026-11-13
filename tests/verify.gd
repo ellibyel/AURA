@@ -45,7 +45,11 @@ func _ready() -> void:
 	for node in one.ui.find_children("*","Button",true,false):
 		if not node.text.is_empty(): text_buttons += 1
 	check(text_buttons==0,"in-game controls are icons, not long text buttons (Assignment 3 feedback)")
-	check(one.BOARD.x*one.BOARD.y/(Aura.DESIGN.x*Aura.DESIGN.y)>0.6,"board fills more than 60% of the screen")
+	check(one.BOARD.x*one.BOARD.y/(Aura.DESIGN.x*Aura.DESIGN.y)>0.75 and one.GRID_SIZE>=76,"board fills more than 75% of the screen, cells 76 px")
+	var pause_rect := Rect2()
+	for node in one.ui.find_children("*","Button",true,false):
+		if node.icon and node.icon.resource_path.ends_with("pause.svg"): pause_rect=node.get_global_rect()
+	check(pause_rect.position.y<20 and pause_rect.end.x>Aura.DESIGN.x-20,"pause button sits in the top-right corner")
 	for key in ["place","rotate","win"]:
 		check(Aura.voices[key].stream != null and Aura.SOUNDS[key].begins_with("res://assets/audio/kenney/"), "sound '%s' is a credited Kenney CC0 file" % key)
 	check(Aura.has_music() and Aura.music.playing, "background music loads and plays")

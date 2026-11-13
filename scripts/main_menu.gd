@@ -26,7 +26,13 @@ func show_home() -> void:
 	character.visible = true
 	character.happy = Aura.total_stars() > 0
 	Aura.label(content,"A QUIET JOURNEY OF LIGHT",Rect2(90,84,700,40),24,Aura.MUTED)
-	Aura.label(content,"AURA",Rect2(83,116,700,105),92)
+	# Title font: Cinzel (SIL Open Font License, assets/fonts/Cinzel_OFL.txt).
+	var title_font := FontVariation.new()
+	title_font.base_font = load("res://assets/fonts/Cinzel.ttf")
+	title_font.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): 700}
+	title_font.spacing_glyph = 14
+	var title := Aura.label(content,"AURA",Rect2(78,108,700,118),100)
+	title.add_theme_font_override("font", title_font)
 	Aura.paragraph(content,"Some memories are small as starlight.\nHelp them find their way home.",Rect2(90,240,650,100),27)
 	Aura.button(content,"Continue journey" if int(Aura.best[0]) > 0 else "Begin journey",Rect2(90,368,380,80),func(): start_level(Aura.unlocked),28)
 	Aura.button(content,"Choose a chapter",Rect2(90,460,380,76),show_chapters)
@@ -73,7 +79,7 @@ func show_credits() -> void:
 	character.visible = false
 	var box := Aura.panel(content,Rect2(70,40,1140,700))
 	Aura.label(box,"AURA / MT-2402",Rect2(20,16,1000,50),36)
-	Aura.paragraph(box,"Elmira Bukhanova — mechanics & level design\nKhalida Yerpan — interface & game flow\nDiana Zhumagali — visual & sound direction\n\nSounds: Kenney (kenney.nl), \"Interface Sounds\" and \"Music Jingles\", CC0 1.0.\nMusic: made in Apple GarageBand with the \"Set Free Melodic Synth\" loop and the Grand Piano instrument, used under the GarageBand licence.\nArt: lightkeeper — our own A2 design built from shapes (tools/photoshop).\nEngine: Godot 4.7 (MIT). Default Godot font.\nAI assistance (ChatGPT, Claude) is listed file by file in the README.\n\nInspired by the calm mood of Frieren: Beyond Journey's End; puzzle references: Monument Valley and Portal. No artwork or music from these works is used.",Rect2(20,80,1090,500),25)
+	Aura.paragraph(box,"Elmira Bukhanova — mechanics & level design\nKhalida Yerpan — interface & game flow\nDiana Zhumagali — visual & sound direction\n\nSounds: Kenney (kenney.nl), \"Interface Sounds\" and \"Music Jingles\", CC0 1.0.\nMusic: made in Apple GarageBand with the \"Set Free Melodic Synth\" loop and the Grand Piano instrument, used under the GarageBand licence.\nArt: lightkeeper — our own A2 design built from shapes (tools/photoshop).\nEngine: Godot 4.7 (MIT). Fonts: Godot default; title in Cinzel (SIL OFL 1.1).\nAI assistance (ChatGPT, Claude) is listed file by file in the README.\n\nInspired by the calm mood of Frieren: Beyond Journey's End; puzzle references: Monument Valley and Portal. No artwork or music from these works is used.",Rect2(20,80,1090,500),25)
 	Aura.button(box,"Back",Rect2(20,600,220,80),show_home)
 
 func start_level(number: int) -> void:

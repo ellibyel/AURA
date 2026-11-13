@@ -28,20 +28,20 @@ func _ready() -> void:
 	var right:=edge.y
 	# Top strip: compact chips on the left, pause and hint on the right.
 	if game.level_number>0:
-		chips.append(_chip(Vector2(left,16),"Ch %d · %s" % [game.level_number,game.level_data.title]))
-		chips.append(_chip(Vector2(left+430,16),""))
-		chips.append(_chip(Vector2(left+600,16),""))
+		chips.append(_chip(Vector2(left,6),"Ch %d · %s" % [game.level_number,game.level_data.title]))
+		chips.append(_chip(Vector2(left+430,6),""))
+		chips.append(_chip(Vector2(left+600,6),""))
 	else:
-		chips.append(_chip(Vector2(left,16),"Creative Studio"))
+		chips.append(_chip(Vector2(left,6),"Creative Studio"))
 		var names:Array=["Mirror","Target","Source"]
 		var keys:Array=["mirror","star","source"]
 		for i in range(3):
-			mutations.append(Aura.button(self,names[i],Rect2(left+260+i*132,12,120,70),func():
+			mutations.append(Aura.button(self,names[i],Rect2(left+260+i*132,4,120,58),func():
 				game.tool=keys[i]
 				game.message="Tool: "+names[i]+". Tap a grid cell."
 				refresh(),24))
-		Aura.button(self,"Save",Rect2(left+660,12,110,70),game.save_layout,24)
-		Aura.button(self,"Load",Rect2(left+782,12,110,70),game.load_layout,24)
+		Aura.button(self,"Save",Rect2(left+660,4,110,58),game.save_layout,24)
+		Aura.button(self,"Load",Rect2(left+782,4,110,58),game.load_layout,24)
 	_icon_button("pause",Rect2(right-80,10,80,80),open_pause)
 	if game.level_number>0:
 		hint_button=_icon_button("hint",Rect2(right-80,104,80,80),game.show_hint)
@@ -59,7 +59,7 @@ func _ready() -> void:
 	rotate_right=_icon_button("rotate_cw",Rect2(right-104,646,104,104),func():game.rotate_selected(45))
 	rotate_left=_icon_button("rotate_ccw",Rect2(right-104,530,104,104),func():game.rotate_selected(-45))
 	mutations.append_array([rotate_left,rotate_right,undo_button,remove_button,reset])
-	toast=Aura.label(self,"",Rect2(240,714,800,52),24,Color.WHITE)
+	toast=Aura.label(self,"",Rect2(240,690,800,52),24,Color.WHITE)
 	toast.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	toast.vertical_alignment=VERTICAL_ALIGNMENT_CENTER
 	var toast_bg:=StyleBoxFlat.new()

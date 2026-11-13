@@ -1,13 +1,13 @@
 extends Node2D
 
 # The board fills most of the screen; icon controls float on a layer above it.
-const GRID_SIZE := 68
+const GRID_SIZE := 76
 const GRID_WIDTH := 16
 const GRID_HEIGHT := 9
 const BOARD := Vector2(GRID_WIDTH * GRID_SIZE, GRID_HEIGHT * GRID_SIZE)
-const ORIGIN := Vector2(96, 94)
-const MIRROR_HALF_LENGTH := 26.8
-const STAR_HIT_RADIUS := 21.0
+const ORIGIN := Vector2(32, 70)
+const MIRROR_HALF_LENGTH := GRID_SIZE * 0.394
+const STAR_HIT_RADIUS := GRID_SIZE * 0.31
 const FREE_HINTS := 1
 # Piece art is drawn for a 52 px cell.
 const PIECE_SCALE := GRID_SIZE / 52.0
