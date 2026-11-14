@@ -2,12 +2,12 @@
 
 Every change below is in build 4.4 (tag `v4.4`). "Checked" says how we tested it.
 
-## Instructor feedback (Assignment 3) [DATE]
+## Instructor feedback (Assignment 3) 
 
 ### 1. Replace the AI-generated character with our own image
 
 - **Before:** the fairy on the main menu was made with ChatGPT image generation, and all six files showed the same pose.
-- **What we changed:** we went back to our own elf-mage design from Assignment 2, where she was drawn from simple shapes in Godot code. We rebuilt the same shapes as Photoshop scripts (`tools/photoshop/AURA_*.jsx`). Each script opens a 400×600 document in Photoshop with every body part on its own layer (hair, robe, arms, staff, ears, face, eyes, mouth, brooch) and an empty "DRAW HERE" layer for further drawing. The game frames are rendered from the same shapes.
+- **What we changed:** we went back to our own elf-mage design from Assignment 2, where she was drawn from simple shapes in Godot code. We rebuilt the same shapes as Photoshop pictures. Each pic a 400×600 document in Photoshop with every body part on its own layer (hair, robe, arms, staff, ears, face, eyes, mouth, brooch). The game frames are rendered from the same shapes.
 - **Result: 8 character frames** in `assets/art/lightkeeper/`: `idle_1`, `idle_2` (breath), `idle_blink`, `happy_1`, `happy_2` (jump), `idle_surprised`, `sad_1`, `sad_2` (tear).
 - **Character animation** (in `scenes/lightkeeper.tscn`, editor-authored):
   - `idle`: breathing and blinking
